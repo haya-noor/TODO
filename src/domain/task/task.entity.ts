@@ -16,8 +16,7 @@ import { Option } from "effect/Option";
  */
 export class Task extends BaseEntity implements IEntity {
   
-  // Entity properties
-  readonly taskId: TaskId;
+  // Task-specific properties (id, createdAt, updatedAt inherited from BaseEntity)
   readonly title: string;
   readonly description: Option<string>;
   readonly status: "TODO" | "IN_PROGRESS" | "DONE";
@@ -34,7 +33,6 @@ export class Task extends BaseEntity implements IEntity {
       updatedAt: data.updatedAt
     });
     
-    this.taskId = data.id;
     this.title = data.title;
     this.description = data.description;
     this.status = data.status;
@@ -65,18 +63,14 @@ export class Task extends BaseEntity implements IEntity {
   /**
    * Serialize the Task entity back to its encoded representation
    * 
+   * Uses automatic serialization with type safety by encoding 'this' directly.
+   * The type assertion is safe because the entity structure matches the schema,
+   * and the schema will apply the correct brands during encoding.
+   * 
    * Returns an Effect that succeeds with SerializedTask
    */
   serialized(): E.Effect<SerializedTask, ParseResult.ParseError, never> {
-    return S.encode(TaskSchema)({
-      id: this.taskId,
-      title: this.title,
-      description: this.description,
-      status: this.status,
-      assigneeId: this.assigneeId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt
-    });
+    return S.encode(TaskSchema)(this as TaskType); 
   }
 
   /**
@@ -95,13 +89,7 @@ export class Task extends BaseEntity implements IEntity {
         return Task.create(updatedData);
       }),
       E.mapError((error) => 
-        new TaskValidationError(
-          "Failed to update task title",
-          "title",
-          newTitle
-        )
-      )
-    );
+        new TaskValidationError("Failed to update task title", "title",newTitle)));
   }
 
   /**
@@ -120,13 +108,7 @@ export class Task extends BaseEntity implements IEntity {
         return Task.create(updatedData);
       }),
       E.mapError((error) => 
-        new TaskValidationError(
-          "Failed to update task description",
-          "description",
-          newDescription
-        )
-      )
-    );
+        new TaskValidationError("Failed to update task description","description",newDescription)));
   }
 
   /**
@@ -145,13 +127,7 @@ export class Task extends BaseEntity implements IEntity {
         return Task.create(updatedData);
       }),
       E.mapError((error) => 
-        new TaskValidationError(
-          "Failed to update task status",
-          "status",
-          newStatus
-        )
-      )
-    );
+        new TaskValidationError("Failed to update task status","status",newStatus)));
   }
 
  

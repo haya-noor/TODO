@@ -2,10 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,20 +12,16 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@domain/*": ["src/domain/*"],
+      "@infra/*": ["src/infra/*"],
+      "@tests/*": ["tests/*"]
+    }
   },
-  "include": ["src/**/*"],
-  // recognize the @ for import paths 
-  "baseUrl": ".",
-  "paths": {
-    "@domain/*": ["src/domain/*"],
-    "@infrastructure/*": ["src/infrastructure/*"],
-    "@presentation/*": ["src/presentation/*"],
-    "@utils/*": ["@domain/*"],
-    "@application/*": ["src/application/*"],
-    "@types/*": ["src/types/*"]
-    
-  },
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }
 

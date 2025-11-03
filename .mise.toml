@@ -1,4 +1,15 @@
 [tools]
 node = "20"
-typescript = "latest"
 
+[tasks]
+"test:user-entity" = "npx vitest run tests/domain.tests/user.domain.tests/user.entity.test.ts"
+"test:user-guards" = "npx vitest run tests/domain.tests/user.domain.tests/user.guards.test.ts"
+"test:task-entity" = "npx vitest run tests/domain.tests/task.domain.tests/task.entity.test.ts"
+"test:task-guards" = "npx vitest run tests/domain.tests/task.domain.tests/task.guards.test.ts"
+"test:integration" = "npx vitest run tests/domain.tests/integration.test.ts"
+
+"test:user-repository" = "npx vitest run tests/infra.tests/user.repository.impl.test.ts"
+"test:task-repository" = "npx vitest run tests/infra.tests/task.repository.impl.test.ts"
+
+dev = "npm run dev"
+build = "npm run build"

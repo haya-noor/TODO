@@ -9,7 +9,7 @@ export const TaskStatusSchema = S.Literal("TODO", "IN_PROGRESS", "DONE")
 
 export const TaskSchema = S.Struct({
   id: TaskIdSchema,
-  title: S.String.pipe(TaskGuards.vlaidateTitle),
+  title: S.String.pipe(TaskGuards.validateTitle),
   description: Optional(S.String.pipe(TaskGuards.validateDescription)),
   status: TaskStatusSchema,
   assigneeId: UserIdSchema,
