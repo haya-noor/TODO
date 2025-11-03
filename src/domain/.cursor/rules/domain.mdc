@@ -1,0 +1,27 @@
+---
+globs: src/domain/**
+description: Domain layer directory structure from the provided image
+---
+
+# Domain layer folder structure
+
+Example structure from the image (domain layer only):
+
+```txt
+domain/
+  user/
+    user.entity.ts
+    user.guards.ts
+    user.error.ts
+    host.entity.ts
+    address.vo.ts
+  utils/
+    base.entity.ts
+    base.repository.ts
+    base.errors.ts
+    refined.types.ts
+    validation.utils.ts
+    pagination.ts
+    index.ts
+  refined/
+```

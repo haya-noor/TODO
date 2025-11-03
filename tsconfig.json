@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  // recognize the @ for import paths 
+  "baseUrl": ".",
+  "paths": {
+    "@domain/*": ["src/domain/*"],
+    "@infrastructure/*": ["src/infrastructure/*"],
+    "@presentation/*": ["src/presentation/*"],
+    "@utils/*": ["@domain/*"],
+    "@application/*": ["src/application/*"],
+    "@types/*": ["src/types/*"]
+    
+  },
+  "exclude": ["node_modules", "dist"]
+}
+
