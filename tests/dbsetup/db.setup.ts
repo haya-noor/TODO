@@ -54,4 +54,3 @@ export async function teardownTestDatabase(db: any): Promise<void> {
   await db.execute(sql`DROP TABLE IF EXISTS tasks CASCADE`);
   await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`);
 }
-

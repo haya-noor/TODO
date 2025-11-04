@@ -8,20 +8,24 @@ task.guards.test.ts - Task validation rules tests
 integration.test.ts - Integration tests for User and Task interactions
 
 Commands: 
-### Run Specific Test File
-
+### Domain layer tests 
 mise run test:user-entity
-
 mise run test:user-guards
-
 mise run test:task-entity
-
 mise run test:task-guards
-
 mise run test:integration
 
 mise run dev           # Start dev server
 mise run build          # Build project 
+
+# For main database
+npm run db:migrate
+npm run db:generate
+
+
+### Infra layer tests 
+mise run test:user-repository
+mise run test:task-repository
 
 
 

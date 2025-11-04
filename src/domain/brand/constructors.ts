@@ -52,12 +52,10 @@ export const UUID = {
   /**
    * Generate a new random UUID
    */
-  init: (): UUIDType => UUIDNominal(randomUUID())
-  ,
-  /**
-   * Check if a string is a valid UUID (non-throwing)
-   */
+  init: (): UUIDType => UUIDNominal(randomUUID()), 
+
   isValid: (s: string): boolean => typeof s === "string" && UUID_PATTERN.test(s)
+
 };
 
 // =============================================================================

@@ -15,7 +15,8 @@ import type { UUID, DateTime } from "../brand/types";
  */
 export class User extends BaseEntity implements IEntity {
   
-  // User-specific properties (id, createdAt, updatedAt inherited from BaseEntity)
+  // Entity properties
+  readonly userId: UserId;
   readonly name: string;
   readonly email: string;
   readonly password: string;
@@ -31,6 +32,7 @@ export class User extends BaseEntity implements IEntity {
       updatedAt: data.updatedAt
     });
     
+    this.userId = data.id;
     this.name = data.name;
     this.email = data.email;
     this.password = data.password;
@@ -60,14 +62,17 @@ export class User extends BaseEntity implements IEntity {
   /**
    * Serialize the User entity back to its encoded representation
    * 
-   * Uses automatic serialization with type safety by encoding 'this' directly.
-   * The type assertion is safe because the entity structure matches the schema,
-   * and the schema will apply the correct brands during encoding.
-   * 
    * Returns an Effect that succeeds with SerializedUser
    */
   serialized(): E.Effect<SerializedUser, ParseResult.ParseError, never> {
-    return S.encode(UserSchema)(this as UserType);
+    return S.encode(UserSchema)({
+      id: this.userId,
+      name: this.name,
+      email: this.email,
+      password: this.password,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    });
   }
 
   /**
@@ -149,7 +154,7 @@ export class User extends BaseEntity implements IEntity {
    * Check if the user has a specific ID
    */
   hasId(userId: UserId): boolean {
-    return this.id === userId;
+    return this.userId === userId;
   }
 
   /**

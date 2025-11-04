@@ -5,7 +5,7 @@ import { Task } from "../../domain/task/task.entity";
 import { RepositoryEffect } from "../../domain/utils/base.repository";
 import { PaginatedData, PaginationOptions } from "../../domain/utils/pagination";
 import { PaginatedSearchParams, SerializedTask } from "../../domain/task/task.schema";
-import { QueryError, MutationError, ForbiddenError } from "../../domain/utils/base.errors";
+import { QueryError, MutationError } from "../../domain/utils/base.errors";
 import { TaskNotFoundError, TaskMutationError } from "../../domain/task/task.errors";
 import type { IEntity } from "../../domain/utils/base.entity";
 import { SerializationError, DeserializationError } from "../infra.errors";
@@ -23,43 +23,78 @@ export class TaskDrizzleRepository extends TaskRepository {
   }
 
   /**
-   * Convert SerializedTask to database format
-   * Input: SerializedTask (already serialized)
-   * Output: Database-ready format (in this case, same as SerializedTask)
-   * why not the E.mapError to handle the SerializationError?
-   * because the SerializedTask is already in the correct format, so we don't need to 
-   * serialize it again
-   * and the caller(add, update, etc.) will handle the SerializationError if it occurs
+   * Convert Task entity to database-serialized format
    */
-  private toDbSerialized(serialized: SerializedTask): E.Effect<SerializedTask, SerializationError, never> {
-    return E.succeed(serialized);
+  private toDbSerialized(task: Task): E.Effect<any, SerializationError, never> {
+    return pipe(
+      task.serialized(),
+      E.map((serialized) => ({
+        id: serialized.id,
+        title: serialized.title,
+        description: serialized.description,
+        status: serialized.status,
+        assigneeId: serialized.assigneeId,
+        createdAt: serialized.createdAt,
+        updatedAt: serialized.updatedAt,
+      })),
+      E.mapError((error) => 
+        new SerializationError(
+          `Failed to serialize task for database: ${error}`,
+          "Task",
+          task.id
+        )
+      )
+    );
   }
 
   /**
-   * Helper method to check if task exists
+   * Helper method to check if an entity exists
    */
-  private ensureExists(id: IEntity["id"]): E.Effect<void, QueryError, never> {
+  private ensureExists(id: IEntity["id"]): E.Effect<void, TaskMutationError, never> {
     return pipe(
       this.fetchById(id),
-      E.flatMap((taskOption) => O.match(taskOption, {
-          onNone: () => E.fail(new TaskNotFoundError(id)),
-          onSome: () => E.succeed(void 0) })),
+      E.flatMap((taskOption) =>
+        O.match(taskOption, {
+          onNone: () => E.fail(new TaskMutationError(
+            "update",
+            "Task not found",
+            "Task",
+            id
+          )),
+          onSome: () => E.succeed(void 0)
+        })
+      ),
       E.mapError((error) => 
-        error instanceof QueryError ? error : new QueryError(`Failed to check task existence: ${error}`)
-      ));
+        error instanceof TaskMutationError
+          ? error
+          : new TaskMutationError("update", `Failed to check task existence: ${error}`, "Task", id)
+      )
+    );
   }
 
   /**
    * Convert database row to Task entity
-   * input: any - database row
-   * output: Task entity or error
-   * DB row -> task entity (using Task.create)
    */
   private fromDbRow(row: any): E.Effect<Task, DeserializationError, never> {
+    const serialized: SerializedTask = {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      status: row.status,
+      assigneeId: row.assigneeId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
     return pipe(
-      Task.create(row as SerializedTask),
+      Task.create(serialized),
       E.mapError((error) =>
-        new DeserializationError(`Failed to deserialize task from database: ${error}`, "Task", row)));
+        new DeserializationError(
+          `Failed to deserialize task from database: ${error}`,
+          "Task",
+          row
+        )
+      )
+    );
   }
 
   /**
@@ -67,18 +102,20 @@ export class TaskDrizzleRepository extends TaskRepository {
    */
   add(entity: Task): RepositoryEffect<Task, MutationError> {
     return pipe(
-      entity.serialized(),
-      E.flatMap((serialized) => this.toDbSerialized(serialized)),
+      this.toDbSerialized(entity),
       E.flatMap((dbData) =>
         E.tryPromise({
           try: () => this.db.insert(tasks).values(dbData),
-          catch: (error) => new TaskMutationError("add", `Failed to add task: ${error}`, "Task", entity.id)})
+          catch: (error) => new TaskMutationError(
+            "add",
+            `Failed to add task: ${error}`,
+            "Task",
+            entity.id
+          )
+        })
       ),
-      E.as(entity),
-      E.mapError((error) =>
-        error instanceof TaskMutationError || error instanceof SerializationError
-          ? error as MutationError : new TaskMutationError("add", `Failed to add task: ${error}`, "Task", entity.id)
-      ));
+      E.as(entity)
+    );
   }
 
   /**
@@ -92,38 +129,35 @@ export class TaskDrizzleRepository extends TaskRepository {
         E.tryPromise({
           try: () => this.db.update(tasks).set(dbData).where(eq(tasks.id, entity.id)),
           catch: (error) => new TaskMutationError(
-            "update", `Failed to update task: ${error}`, "Task", entity.id)})),
+            "update",
+            `Failed to update task: ${error}`,
+            "Task",
+            entity.id
+          )
+        })
+      ),
       E.as(entity),
       E.mapError((error) => 
         error instanceof TaskMutationError || error instanceof SerializationError
-          ? error as MutationError : new TaskMutationError("update", `Failed to update task: ${error}`, "Task", entity.id)
-      ));
+          ? error as MutationError
+          : new TaskMutationError("update", `Failed to update task: ${error}`, "Task", entity.id)
+      )
+    );
   }
 
   /**
-Fetches all tasks from the repository
-try: 
-The "try" part executes a DB read: SELECT * FROM tasks
-catch:
-If the Promise rejects, wrap the failure into a domain-level QueryError
-flatMap: 
-When the SELECT succeeds, we have an array of raw DB rows (any[])
-E.all, rows.map : 
-For each row, run domain deserialization/validation (this.fromDbRow)
-E.all collects all per-row Effects into a single Effect of Task[]
-   
+   * Fetches all tasks from the repository
    */
   fetchAll(): RepositoryEffect<Task[], QueryError> {
     return pipe(
       E.tryPromise({
-  
         try: (): Promise<any[]> => this.db.select().from(tasks),
-        catch: (error) => new ForbiddenError(`User is not authorized to fetch all tasks: ${error}`)
+        catch: (error) => new QueryError(`Failed to fetch all tasks: ${error}`)
       }),
       E.flatMap((rows: any[]) => 
         pipe(
           E.all(rows.map((row: any) => this.fromDbRow(row))),
-          E.mapError((error) => new DeserializationError(`Failed to deserialize tasks: ${error.message}`, "Task"))
+          E.mapError((error) => new QueryError(`Failed to deserialize tasks: ${error.message}`))
         )
       )
     );
@@ -138,11 +172,13 @@ E.all collects all per-row Effects into a single Effect of Task[]
         try: (): Promise<any[]> => this.db.select().from(tasks).where(eq(tasks.id, id)).limit(1),
         catch: (error) => new QueryError(`Failed to fetch task by id: ${error}`)
       }),
-      //  If the SELECT succeeds, we get an array of rows (0 or 1 here due to LIMIT 1)
-      E.flatMap((rows: any[]) => { if (rows.length === 0) {return E.succeed(O.none());}
+      E.flatMap((rows: any[]) => {
+        if (rows.length === 0) {
+          return E.succeed(O.none());
+        }
         return pipe(
-          //No rows found? Succeed with Option.none (meaning "no task with that id")
-          this.fromDbRow(rows[0]), E.map(O.some),
+          this.fromDbRow(rows[0]),
+          E.map(O.some),
           E.mapError((error) => new QueryError(`Failed to deserialize task: ${error.message}`))
         );
       })
@@ -155,54 +191,64 @@ E.all collects all per-row Effects into a single Effect of Task[]
   deleteById(id: IEntity["id"]): RepositoryEffect<Task, MutationError> {
     return pipe(
       this.fetchById(id),
-      E.flatMap((taskOption) => O.match(taskOption, {
-          onNone: () => E.fail(new TaskMutationError("remove", "Task not found","Task",id)),
-          onSome: (task) => E.succeed(task)})
+      E.flatMap((taskOption) => 
+        O.match(taskOption, {
+          onNone: () => E.fail(new TaskMutationError(
+            "remove", "Task not found","Task",id)),
+          onSome: (task) => E.succeed(task)
+        })
       ),
       E.tap(() =>
         E.tryPromise({
           try: () => this.db.delete(tasks).where(eq(tasks.id, id)),
-          catch: (error) => new TaskMutationError("remove",`Failed to delete task: ${error}`,"Task",id)})),
+          catch: (error) => new TaskMutationError(
+            "remove",`Failed to delete task: ${error}`,"Task",id)})),
       E.mapError((error) => 
-        error instanceof TaskMutationError ? error : new TaskMutationError("remove", `Failed to delete task: ${error}`, "Task", id)
+        error instanceof TaskMutationError
+          ? error
+          : new TaskMutationError("remove", `Failed to delete task: ${error}`, "Task", id)
       ));
   }
 
   /**
-  Search for tasks with pagination and text filterin
-  CountQuery:returns a single number: the total number of rows that match the filter 
-  (ignores LIMIT/OFFSET). It’s for pagination metadata (total, totalPages, hasNext, etc.).
-  DataQuery: returns the actual page of rows you want to display/return to the caller
-  dataQuery returns the raw DB rows for that page.
-  Then you run this.fromDbRow on each row to get Task entities.
-  Finally you bundle them with pagination: buildPaginationMeta(page, limit, total) and 
-  return that to the caller of search(...).
-
+   * Search for tasks with pagination and text filtering
    */
   search(params: PaginatedSearchParams): RepositoryEffect<PaginatedData<Task>, QueryError> {
     return pipe(
       E.succeed(params),
       E.flatMap((validParams) => {
         // Build WHERE condition - search by title and description
-        const conditions = flattenConditions([buildTextSearchFilter([tasks.title, tasks.description], validParams.text)]);
+        const conditions = flattenConditions([
+          buildTextSearchFilter([tasks.title, tasks.description], validParams.text)
+        ]);
 
-        // Combine all conditions using AND if there are multiple, otherwise use the first one
-        const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
         // Pagination
         const { page, limit } = validParams;
         const offset = calculateOffset(page, limit);
 
+        // Execute count query
         const countQuery = E.tryPromise({
           try: async (): Promise<number> => {
-            const result = await this.db.select({ count: sql<number>`count(*)` }).from(tasks).where(whereClause);
+            const result = await this.db
+              .select({ count: sql<number>`count(*)` })
+              .from(tasks)
+              .where(whereClause);
             return Number(result[0].count);
           },
           catch: (error) => new QueryError(`Failed to count tasks: ${error}`)
         });
 
+        // Execute data query
         const dataQuery = E.tryPromise({
-          try: (): Promise<any[]> => this.db.select().from(tasks).where(whereClause).orderBy(desc(tasks.createdAt)).limit(limit).offset(offset),
+          try: (): Promise<any[]> => this.db
+            .select()
+            .from(tasks)
+            .where(whereClause)
+            .orderBy(desc(tasks.createdAt))
+            .limit(limit)
+            .offset(offset),
           catch: (error) => new QueryError(`Failed to search tasks: ${error}`)
         });
 
@@ -212,11 +258,16 @@ E.all collects all per-row Effects into a single Effect of Task[]
           E.flatMap(([total, rows]: [number, any[]]) =>
             pipe(
               E.all(rows.map((row: any) => this.fromDbRow(row))),
-              E.map((taskEntities) => ({data: taskEntities,pagination: buildPaginationMeta(page, limit, total)
+              E.map((taskEntities) => ({
+                data: taskEntities,
+                pagination: buildPaginationMeta(page, limit, total)
               })),
-              E.mapError((error) => new DeserializationError(`Failed to deserialize tasks: ${error.message}`, "Task"))
-            ))
-        );})
-    );}
+              E.mapError((error) => new QueryError(`Failed to deserialize tasks: ${error.message}`))
+            )
+          )
+        );
+      })
+    );
+  }
 }
 

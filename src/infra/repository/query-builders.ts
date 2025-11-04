@@ -7,17 +7,8 @@ import { or, like, SQL } from "drizzle-orm";
 import type { AnyColumn } from "drizzle-orm";
 
 /**
-Query Builders - Simple, reusable query utilities
-O.fromNullable(searchText):
-If searchText is undefined or null ⇒ it becomes O.none (meaning “no value”).
-If searchText is a string ⇒ it becomes O.some(searchText).
-
-O.map((text) => runs only if the Option is Some (meaning "has a value") 
-%${text}% means: match any value that contains text anywhere.
-text: the value to search for 
-like(col, pattern): build `like` condition for each column
-or(...conditions): combine all conditions using OR
-*/
+ * Query Builders - Simple, reusable query utilities
+ */
 
 /**
 Build text search filter (searches across multiple columns)
@@ -45,9 +36,7 @@ export const buildTextSearchFilter = (
   );
 
 /**
-when you build filters like buildTextSearchFilter(...), some filters may be absent 
-(return Option.none). flattenConditions removes those and leaves you with only the 
-real conditions you can pass to the database.
+ * Flatten Option conditions into array of SQL conditions
  */
 export const flattenConditions = (conditions: O.Option<SQL>[]): SQL[] =>
     // Flatten the Option conditions into an array 

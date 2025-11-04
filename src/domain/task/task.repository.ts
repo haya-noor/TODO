@@ -22,8 +22,6 @@ export abstract class TaskRepository extends BaseRepository<Task> {
 
 
   abstract deleteById(id: IEntity["id"]): RepositoryEffect<Task, NotFoundError | MutationError>;
-  
-  // fetchPaginated(options: PaginationOptions): RepositoryEffect<PaginatedData<Task>>;
 
   
   abstract search(

@@ -48,4 +48,3 @@ export function createConnection(
 export async function closeConnection(client: postgres.Sql): Promise<void> {
   await client.end();
 }
-
