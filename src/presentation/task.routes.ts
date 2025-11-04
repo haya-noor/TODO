@@ -4,12 +4,18 @@ import { TaskWorkflow } from "../app/application/task/task.workflows";
 import { validateUser, type BaseContext, type AuthenticatedContext } from "./auth";
 import { withActor, executeEffect, serializeEntity, toStandard } from "./route.utils";
 import * as TaskDTOs from "../app/application/task/task.dtos";
+import * as TaskResponseDTOs from "../app/application/task/task.response.dto";
+import type { 
+  TaskResponseDto, 
+  TasksListResponseDto, 
+  TaskSearchResponseDto,
+  TaskRemoveResponseDto 
+} from "../app/application/task/task.response.dto";
 
 /**
  * Task Routes
  * Implements CRUD operations for tasks using oRPC
  * 
- * Following CQRS (Command Query Responsibility Segregation):
  * - Commands: Operations that MODIFY state (create, update, delete) → use `command` variable
  * - Queries: Operations that READ state (fetch, getById, search) → use `query` variable
  * 
@@ -24,7 +30,6 @@ import * as TaskDTOs from "../app/application/task/task.dtos";
  *   3. Executes workflow method
  *   4. Returns serialized response
  */
-
 
 /*
 create task route (COMMAND - modifies state)
@@ -42,9 +47,9 @@ create task route (COMMAND - modifies state)
 export const create = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.CreateTaskDtoSchema))
-  .output(toStandard(TaskDTOs.TaskResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TaskResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TaskResponseDto> => {
     // Get the TaskWorkflow instance from the dependency injection container
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     
@@ -64,9 +69,9 @@ export const create = os
 export const update = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.UpdateTaskDtoSchema))
-  .output(toStandard(TaskDTOs.TaskResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TaskResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TaskResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const command = withActor(input, context); // COMMAND - modifies state
     const result = await executeEffect(workflow.updateTask(command));
@@ -81,9 +86,9 @@ export const update = os
 export const remove = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.RemoveTaskDtoSchema))
-  .output(toStandard(TaskDTOs.TaskRemoveResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TaskRemoveResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TaskRemoveResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const command = withActor(input, context); // COMMAND - modifies state
     await executeEffect(workflow.deleteTaskById(command));
@@ -98,9 +103,9 @@ export const remove = os
 export const fetch = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.TasksPaginationDtoSchema))
-  .output(toStandard(TaskDTOs.TasksListResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TasksListResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TasksListResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const query = withActor(input, context); // QUERY - reads state
     const result = await executeEffect(workflow.getTasksPaginated(query));
@@ -119,9 +124,9 @@ export const fetch = os
 export const getById = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.RemoveTaskDtoSchema)) // Uses same schema as remove (id only)
-  .output(toStandard(TaskDTOs.TaskResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TaskResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TaskResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const query = withActor(input, context); // QUERY - reads state
     const result = await executeEffect(workflow.getTaskById(query));
@@ -135,9 +140,9 @@ export const getById = os
 // QUERY: Get all tasks (no input needed)
 export const getAll = os
   .$context<BaseContext>()
-  .output(toStandard(TaskDTOs.TasksListResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TasksListResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TasksListResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const result = await executeEffect(workflow.getAllTasks()); // No input enrichment needed
     
@@ -155,9 +160,9 @@ export const getAll = os
 export const search = os
   .$context<BaseContext>()
   .input(toStandard(TaskDTOs.TaskSearchDtoSchema))
-  .output(toStandard(TaskDTOs.TaskSearchResponseDtoSchema))
+  .output(toStandard(TaskResponseDTOs.TaskSearchResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<TaskSearchResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     const query = withActor(input, context); // QUERY - reads state
     const result = await executeEffect(workflow.searchTasks(query));

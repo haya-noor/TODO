@@ -49,6 +49,7 @@ export type PaginationOptions = S.Schema.Type<typeof PaginationOptions>
  * Paginated data wrapper
  * 
  * Standard format for paginated collections.
+ * This is the source of truth for pagination structure.
  */
 export interface PaginatedData<T> {
   data: T[]
@@ -61,6 +62,44 @@ export interface PaginatedData<T> {
     hasPrev: boolean
   }
 }
+
+/**
+ * Pagination metadata schema
+ * 
+ * Schema definition that matches PaginatedData['pagination'] structure.
+ * Used for runtime validation in response DTOs.
+ */
+export const PaginationMetaSchema = S.Struct({
+  page: S.Number,
+  limit: S.Number,
+  total: S.Number,
+  totalPages: S.Number,
+  hasNext: S.Boolean,
+  hasPrev: S.Boolean,
+})
+
+export type PaginationMeta = S.Schema.Type<typeof PaginationMetaSchema>
+
+/**
+ * Create a PaginatedData schema for a given data type schema
+ * 
+ * This factory function creates a schema that matches PaginatedData<T> structure.
+ * Reuses the existing PaginatedData interface and pagination helpers.
+ * 
+ * @param dataSchema - Schema for the data array elements
+ * @returns Schema for PaginatedData<T>
+ * 
+ * @example
+ * ```typescript
+ * const TasksPaginatedSchema = createPaginatedDataSchema(TaskBasicViewDtoSchema)
+ * // Returns: Schema<PaginatedData<Task>>
+ * ```
+ */
+export const createPaginatedDataSchema = <A, I, R>(dataSchema: S.Schema<A, I, R>) =>
+  S.Struct({
+    data: S.Array(dataSchema),
+    pagination: PaginationMetaSchema,
+  })
 
 
 /**

@@ -4,6 +4,12 @@ import { UserWorkflow } from "../app/application/user/user.workflows";
 import { validateUser, type BaseContext, type AuthenticatedContext } from "./auth";
 import { withActor, executeEffect, serializeEntity, toStandard } from "./route.utils";
 import * as UserDTOs from "../app/application/user/user.dtos";
+import * as UserResponseDTOs from "../app/application/user/user.response.dto";
+import type { 
+  UserResponseDto, 
+  UsersListResponseDto, 
+  UserRemoveResponseDto 
+} from "../app/application/user/user.response.dto";
 
 /**
  * User Routes
@@ -54,9 +60,9 @@ create user route (COMMAND - modifies state)
 export const create = os
   .$context<BaseContext>()
   .input(toStandard(UserDTOs.CreateUserDtoSchema))
-  .output(toStandard(UserDTOs.UserResponseDtoSchema))
+  .output(toStandard(UserResponseDTOs.UserResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<UserResponseDto> => {
     // Get the UserWorkflow instance from the dependency injection container
     const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW);
     
@@ -76,9 +82,9 @@ export const create = os
 export const update = os
   .$context<BaseContext>()
   .input(toStandard(UserDTOs.UpdateUserDtoSchema))
-  .output(toStandard(UserDTOs.UserResponseDtoSchema))
+  .output(toStandard(UserResponseDTOs.UserResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<UserResponseDto> => {
     const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW);
     const command = withActor(input, context); // COMMAND - modifies state
     const result = await executeEffect(workflow.updateUser(command));
@@ -93,9 +99,9 @@ export const update = os
 export const remove = os
   .$context<BaseContext>()
   .input(toStandard(UserDTOs.RemoveUserDtoSchema))
-  .output(toStandard(UserDTOs.UserRemoveResponseDtoSchema))
+  .output(toStandard(UserResponseDTOs.UserRemoveResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<UserRemoveResponseDto> => {
     const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW);
     const command = withActor(input, context); // COMMAND - modifies state
     await executeEffect(workflow.deleteUserById(command));
@@ -110,9 +116,9 @@ export const remove = os
 export const fetch = os
   .$context<BaseContext>()
   .input(toStandard(UserDTOs.UsersPaginationDtoSchema))
-  .output(toStandard(UserDTOs.UsersListResponseDtoSchema))
+  .output(toStandard(UserResponseDTOs.UsersListResponseDtoSchema))
   .use(validateUser)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input, context }): Promise<UsersListResponseDto> => {
     const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW);
     const query = withActor(input, context); // QUERY - reads state
     const result = await executeEffect(workflow.getUsersPaginated(query));

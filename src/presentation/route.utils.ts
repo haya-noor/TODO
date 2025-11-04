@@ -56,7 +56,7 @@ export const executeEffect = async <T>(effect: E.Effect<T, any, never>): Promise
  * This serializedEntity function is used to serialize any entity before 
  * sending the response to the client. 
  */
-export const serializeEntity = async (entity: any) => {
+export const serializeEntity = async (entity: any): Promise<any> => {
   return await executeEffect(entity.serialized());
 };
 
