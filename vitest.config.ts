@@ -5,14 +5,15 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@domain": path.resolve(__dirname, "./src/domain"),
-      "@infra": path.resolve(__dirname, "./src/infra"),
+      "@domain": path.resolve(__dirname, "./src/app/domain"),
+      "@infra": path.resolve(__dirname, "./src/app/infra"),
       "@tests": path.resolve(__dirname, "./tests"),
     },
   },
   test: {
     globals: true,
     environment: "node",
+    setupFiles: [path.resolve(__dirname, "./tests/setup.ts")],
     include: ["tests/**/*.test.ts"],
     coverage: {
       provider: "v8",

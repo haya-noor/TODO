@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { container } from "tsyringe";
-import { TOKENS, setupDI } from "./tokens";
+import { TOKENS } from "./tokens";
+import { setupDI } from "./setup";
 
 /**
  * Dependency Injection Container Setup

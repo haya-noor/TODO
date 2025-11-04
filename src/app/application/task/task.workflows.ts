@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { Effect as E, pipe, Option as O, Schema as S } from "effect";
 import { injectable, inject } from "tsyringe";
 
