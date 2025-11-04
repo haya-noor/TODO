@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { Effect as E } from "effect";
 import * as fc from "fast-check";
-import { User } from "@domain/user/user.entity";
-import { UserId } from "@domain/brand/ids";
-import { UserValidationError } from "@domain/user/user.errors";
-import { UserSchema } from "@domain/user/user.schema";
-import { SerializedUser } from "@domain/user/user.schema"; 
+import { User } from "@/app/domain/user/user.entity";
+import { UserId } from "@/app/domain/brand/ids";
+import { UserValidationError } from "@/app/domain/user/user.errors";
+import { UserSchema } from "@/app/domain/user/user.schema";
+import { SerializedUser } from "@/app/domain/user/user.schema"; 
 
 import {
   TestDataGenerator,

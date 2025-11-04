@@ -6,7 +6,7 @@ import {
   RemoveTaskDtoSchema,
   TaskBasicViewDtoSchema,
   TaskSearchDtoSchema,
-} from "@/application/task/task.dtos";
+} from "../../../src/app/application/task/task.dtos";
 import { TestDataGenerator } from "../../test.data";
 
 describe("Task DTOs", () => {

@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 import * as fc from "fast-check";
-import type { UserId, TaskId } from "@domain/brand/ids";
-import { UserId as UserIdHelper, TaskId as TaskIdHelper } from "@domain/brand/ids";
-import type { SerializedUser } from "@domain/user/user.schema";
-import type { SerializedTask } from "@domain/task/task.schema";
+import type { UserId, TaskId } from "@/app/domain/brand/ids";
+import { UserId as UserIdHelper, TaskId as TaskIdHelper } from "@/app/domain/brand/ids";
+import type { SerializedUser } from "@/app/domain/user/user.schema";
+import type { SerializedTask } from "@/app/domain/task/task.schema";
 
 /**
  * Fast-check arbitraries for generating random test data

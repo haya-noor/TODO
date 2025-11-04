@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Effect as E } from "effect";
-import { User } from "@domain/user/user.entity";
-import { Task } from "@domain/task/task.entity";
+import { User } from "@/app/domain/user/user.entity";
+import { Task } from "@/app/domain/task/task.entity";
 import { TestDataGenerator } from "../test.data";
 import { faker } from "@faker-js/faker";
 

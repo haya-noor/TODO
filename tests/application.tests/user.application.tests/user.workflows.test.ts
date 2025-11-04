@@ -7,12 +7,12 @@ import {
   getUserById,
   deleteUserById,
   getUsersPaginated,
-} from "@/application/user/user.workflows";
-import { UserRepository } from "@/domain/user/user.repository";
-import { User } from "@/domain/user/user.entity";
-import { UserNotFoundError, UserValidationError } from "@/domain/user/user.errors";
+} from "../../../src/app/application/user/user.workflows";
+import { UserRepository } from "@/app/domain/user/user.repository";
+import { User } from "@/app/domain/user/user.entity";
+import { UserNotFoundError, UserValidationError } from "@/app/domain/user/user.errors";
 import { TestDataGenerator } from "../../test.data";
-import { QueryError } from "@/domain/utils/base.errors";
+import { QueryError } from "@/app/domain/utils/base.errors";
 
 describe("User Workflows", () => {
   let mockRepo: UserRepository;

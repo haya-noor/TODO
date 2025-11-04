@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { Effect as E, Option as O } from "effect";
-import { UserDrizzleRepository } from "@/infra/repository/user.repository.impl";
-import { User } from "@/domain/user/user.entity";
+import { UserDrizzleRepository } from "../../src/app/infra/repository/user.repository.impl";
+import { User } from "@/app/domain/user/user.entity";
 import { TestDataGenerator } from "../test.data";
-import { UUID } from "@/domain/brand/constructors";
+import { UUID } from "@/app/domain/brand/constructors";
 import { createConnection, closeConnection } from "../dbsetup/db.connection";
 import { 
   setupTestDatabase, 

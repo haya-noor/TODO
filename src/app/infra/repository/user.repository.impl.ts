@@ -1,16 +1,16 @@
 import { Effect as E, pipe, Option as O } from "effect";
 import { eq, and, sql, desc } from "drizzle-orm";
-import { UserRepository } from "../../domain/user/user.repository";
-import { User } from "../../domain/user/user.entity";
-import { RepositoryEffect } from "../../domain/utils/base.repository";
-import { PaginatedData, PaginationOptions } from "../../domain/utils/pagination";
-import { SerializedUser } from "../../domain/user/user.schema";
-import { QueryError, MutationError, ForbiddenError } from "../../domain/utils/base.errors";
-import { UserNotFoundError, UserMutationError } from "../../domain/user/user.errors";
-import type { IEntity } from "../../domain/utils/base.entity";
+import { UserRepository } from "@domain/user/user.repository";
+import { User } from "@domain/user/user.entity";
+import { RepositoryEffect } from "@domain/utils/base.repository";
+import { PaginatedData, PaginationOptions } from "@domain/utils/pagination";
+import { SerializedUser } from "@domain/user/user.schema";
+import { QueryError, MutationError, ForbiddenError } from "@domain/utils/base.errors";
+import { UserNotFoundError, UserMutationError } from "@domain/user/user.errors";
+import type { IEntity } from "@domain/utils/base.entity";
 import { SerializationError, DeserializationError } from "../infra.errors";
 import { users } from "../db/user.table";
-import { UUID } from "../../domain/brand/constructors";
+import { UUID } from "@domain/brand/constructors";
 import { calculateOffset, buildPaginationMeta } from "./query-builders";
 
 type DrizzleDB = any;

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { Effect as E, Option } from "effect";
 import * as fc from "fast-check";
-import { Task } from "../../../src/domain/task/task.entity";
-import { TaskValidationError } from "../../../src/domain/task/task.errors";
-import { TaskId, UserId } from "../../../src/domain/brand/ids";
+import { Task } from "../../../src/app/domain/task/task.entity";
+import { TaskValidationError } from "../../../src/app/domain/task/task.errors";
+import { TaskId, UserId } from "../../../src/app/domain/brand/ids";
 import {
   TestDataGenerator,
   serializedTaskArbitrary,

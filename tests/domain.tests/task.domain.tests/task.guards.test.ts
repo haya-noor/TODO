@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Schema as S, Effect as E } from "effect";
 import * as fc from "fast-check";
-import { TaskGuards } from "@domain/task/task.guard";
+import { TaskGuards } from "@/app/domain/task/task.guard";
 import {
   validTitleArbitrary,
   validDescriptionArbitrary,

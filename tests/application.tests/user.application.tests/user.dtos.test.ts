@@ -6,7 +6,7 @@ import {
   UpdateUserDtoSchema,
   RemoveUserDtoSchema,
   UserBasicViewDtoSchema,
-} from "@/application/user/user.dtos";
+} from "../../../src/app/application/user/user.dtos";
 import { TestDataGenerator } from "../../test.data";
 
 describe("User DTOs", () => {

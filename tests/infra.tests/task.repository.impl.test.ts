@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { Effect as E, Option as O } from "effect";
-import { TaskDrizzleRepository } from "@/infra/repository/task.repository.impl";
-import { Task } from "@/domain/task/task.entity";
-import { UUID } from "@/domain/brand/constructors";
+import { TaskDrizzleRepository } from "../../src/app/infra/repository/task.repository.impl";
+import { Task } from "@/app/domain/task/task.entity";
+import { UUID } from "@/app/domain/brand/constructors";
 import { TestDataGenerator } from "../test.data";
 import { createConnection, closeConnection } from "../dbsetup/db.connection";
 import {

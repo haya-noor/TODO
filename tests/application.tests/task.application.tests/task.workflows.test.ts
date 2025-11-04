@@ -8,12 +8,12 @@ import {
   deleteTaskById,
   getTasksPaginated,
   searchTasks,
-} from "@/application/task/task.workflows";
-import { TaskRepository } from "@/domain/task/task.repository";
-import { Task } from "@/domain/task/task.entity";
-import { TaskNotFoundError, TaskValidationError } from "@/domain/task/task.errors";
+} from "../../../src/app/application/task/task.workflows";
+import { TaskRepository } from "@/app/domain/task/task.repository";
+import { Task } from "@/app/domain/task/task.entity";
+import { TaskNotFoundError, TaskValidationError } from "@/app/domain/task/task.errors";
 import { TestDataGenerator } from "../../test.data";
-import { QueryError } from "@/domain/utils/base.errors";
+import { QueryError } from "@/app/domain/utils/base.errors";
 
 describe("Task Workflows", () => {
   let mockRepo: TaskRepository;

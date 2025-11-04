@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Schema as S, Effect as E } from "effect";
 import * as fc from "fast-check";
-import { UserGuards } from "@domain/user/user.guards";
+import { UserGuards } from "@/app/domain/user/user.guards";
 import {
   validNameArbitrary,
   validEmailArbitrary,
