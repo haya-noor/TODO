@@ -46,31 +46,38 @@ const serializeUser = async (user: any) => {
 
 /*
 create user route (COMMAND - modifies state)
-   - .$context<BaseContext>() - Attach context (like user info etc.) from HTTP request headers
+This is a PUBLIC endpoint - NO AUTHENTICATION REQUIRED
+New users register here to create their account
+
+   - .$context<BaseContext>() - Attach context from HTTP request headers
    - .input(toStandard(CreateUserDtoSchema)) - Validate input using DTO schema
    - .output(toStandard(UserResponseDtoSchema)) - Validate output using response DTO schema
-   - .use(validateUser) - Middleware for authentication
-   - .handler(async ({ input, context }) => {
+   - NO .use(validateUser) - This is PUBLIC, no auth needed for registration
+   - .handler(async ({ input }) => {
      - const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW) - Get UserWorkflow from DI container
-     - const command = withActor(input, context) - Enrich input with actor info (user ID, role)
-     - const result = await executeEffect(workflow.createUser(command)) - Execute the workflow
+     - const result = await executeEffect(workflow.createUser(input)) - Execute the workflow
      - return { success: true, data: await serializeUser(result) } - Return serialized result
    })
 */
+
+/*
+For the create endpoint, we don't need to validate the user (so don't user .use(validateUser))
+Reason: New users can't have a JWT token before they're created!
+
+Task creation requires authentication because it's a private endpoint that only 
+authenticated users can access
+*/ 
 export const create = os
   .$context<BaseContext>()
   .input(toStandard(UserDTOs.CreateUserDtoSchema))
   .output(toStandard(UserResponseDTOs.UserResponseDtoSchema))
-  .use(validateUser)
-  .handler(async ({ input, context }): Promise<UserResponseDto> => {
+  // NO AUTHENTICATION - This is a public registration endpoint
+  .handler(async ({ input }): Promise<UserResponseDto> => {
     // Get the UserWorkflow instance from the dependency injection container
     const workflow = resolve<UserWorkflow>(TOKENS.USER_WORKFLOW);
     
-    // Enrich input with actor info (e.g., user ID, email etc) using the context
-    const command = withActor(input, context);
-    
-    // Execute the workflow
-    const result = await executeEffect(workflow.createUser(command));
+    // Execute the workflow - no need to enrich with actor info since user doesn't exist yet
+    const result = await executeEffect(workflow.createUser(input));
     
     return {
       success: true,

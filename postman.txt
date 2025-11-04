@@ -1,70 +1,954 @@
+# TODO API - Comprehensive End-to-End Testing with cURL
 
- Complete Flow: Where authHeader Comes From
+**Base URL:** http://localhost:3000
 
+---
 
- The flow is:
-Client sends HTTP request with header:
-   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+## 🔐 Authentication Flow
 
-Node.js HTTP server extracts all headers from req.headers:
-   context: { headers: req.headers }
+### Authentication Strategy
 
-oRPC route receives context with headers:
-   .$context<BaseContext>()  // BaseContext = { headers: IncomingHttpHeaders }
+**PUBLIC Endpoints (No Auth Required):**
+- `POST /user/create` - Register new user account
+- `POST /auth/login` - Login and get JWT token (TO BE IMPLEMENTED)
 
-Auth middleware extracts the Authorization header:
-   context.headers.authorization  // "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+**PROTECTED Endpoints (JWT Required):**
+- All other user endpoints (update, fetch, remove)
+- All task endpoints
 
-JWT helper receives this as authHeader parameter:
-   extractTokenFromHeader(authHeader)
-   // authHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+---
 
+## Getting Started - Complete Flow
 
+### Step 1: Register a New User (PUBLIC - No Auth)
+```bash
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+  }'
+```
 
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. CLIENT (Browser/Postman/API Client)                         │
-│    Sends HTTP Request:                                          │
-│    POST http://localhost:3000/user/create                       │
-│    Headers: {                                                   │
-│      Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."   │  ← JWT Token here!
-│    }                                                            │
-│    Body: { name: "John", email: "john@example.com" }          │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ 2. HTTP SERVER (Node.js - will be created in server.ts)        │
-│    const server = createServer(async (req, res) => {           │
-│      const handler = new RPCHandler(router, {...});            │
-│      await handler.handle(req, res, {                          │
-│        context: {                                              │
-│          headers: req.headers  ← Extracts headers from HTTP req│
-│        }                                                       │
-│      });                                                       │
-│    });                                                         │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ 3. ORPC ROUTE (user.routes.ts)                                 │
-│    export const create = os                                     │
-│      .$context<BaseContext>()  ← Gets { headers: req.headers } │
-│      .use(validateUser)                                        │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ 4. AUTH MIDDLEWARE (auth.middleware.ts)                        │
-│    validateUser({ context, next }) {                           │
-│      const token = extractTokenFromHeader(                     │
-│        context.headers.authorization  ← Headers from HTTP req  │
-│      );                                                        │
-│    }                                                           │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ 5. JWT HELPER (jwt.helper.ts)                                  │
-│    extractTokenFromHeader(authHeader) {                        │
-│      // authHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..." │
-│      const match = authHeader.match(/^Bearer\s+(.+)$/i);      │
-│      return match ? match[1] : null;                          │
-│      // Returns: "eyJhbGciOiJIUzI1NiIsInR5cCI6..."           │
-│    }                                                           │
-└─────────────────────────────────────────────────────────────────┘
+### Step 2: Login to Get JWT Token (TO BE IMPLEMENTED)
+```bash
+# This endpoint needs to be implemented in /auth/login
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+  }'
+
+# Expected Response:
+# {
+#   "success": true,
+#   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+#   "user": {
+#     "id": "550e8400-e29b-41d4-a716-446655440000",
+#     "email": "john.doe@example.com",
+#     "role": "assignee"
+#   }
+# }
+```
+
+### Step 3: Export Token for Protected Endpoints
+```bash
+export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+## 👤 USER ENDPOINTS
+
+### 1. Create User (Register) - 🔓 PUBLIC
+**POST /user/create**
+
+**⚠️ NO AUTHENTICATION REQUIRED** - This is a public registration endpoint
+
+```bash
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "createdAt": "2025-11-04T19:00:00.000Z",
+    "updatedAt": "2025-11-04T19:00:00.000Z"
+  }
+}
+```
+
+**Save user ID for subsequent tests:**
+```bash
+export USER_ID="550e8400-e29b-41d4-a716-446655440000"
+```
+
+---
+
+### 2. Update User - 🔒 PROTECTED
+**POST /user/update**
+
+**⚠️ AUTHENTICATION REQUIRED** - Must provide valid JWT token
+
+```bash
+# Update name only
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$USER_ID'",
+    "name": "John Updated Doe"
+  }'
+
+# Update email and password
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$USER_ID'",
+    "email": "john.updated@example.com",
+    "password": "NewSecurePass456!"
+  }'
+
+# Update all fields
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$USER_ID'",
+    "name": "John Completely Updated",
+    "email": "john.new@example.com",
+    "password": "AnotherPass789!"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "John Updated Doe",
+    "email": "john.updated@example.com",
+    "createdAt": "2025-11-04T19:00:00.000Z",
+    "updatedAt": "2025-11-04T19:30:00.000Z"
+  }
+}
+```
+
+---
+
+### 3. Fetch Users (Paginated) - 🔒 PROTECTED
+**POST /user/fetch**
+
+**⚠️ AUTHENTICATION REQUIRED** - Must provide valid JWT token
+
+```bash
+# Basic pagination - page 1, 10 items per page
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10
+  }'
+
+# Get page 2, 20 items
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 2,
+    "limit": 20
+  }'
+
+# Get page 1, 5 items
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 5
+  }'
+```
+
+Expected Response:
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "createdAt": "2025-11-04T19:00:00.000Z",
+      "updatedAt": "2025-11-04T19:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 5,
+    "totalCount": 50,
+    "pageSize": 10,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
+}
+```
+
+---
+
+### 4. Delete User - 🔒 PROTECTED
+**POST /user/remove**
+
+**⚠️ AUTHENTICATION REQUIRED** - Must provide valid JWT token
+
+```bash
+curl -X POST http://localhost:3000/user/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$USER_ID'"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+---
+
+## ✅ TASK ENDPOINTS
+
+**⚠️ ALL TASK ENDPOINTS ARE PROTECTED - JWT Token Required**
+
+### 1. Create Task - 🔒 PROTECTED
+**POST /task/create**
+
+```bash
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "Implement user authentication",
+    "description": "Add JWT-based authentication with refresh tokens",
+    "status": "TODO",
+    "assigneeId": "'$USER_ID'"
+  }'
+
+# Create another task with different status
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "Write API documentation",
+    "description": "Document all endpoints with examples",
+    "status": "IN_PROGRESS",
+    "assigneeId": "'$USER_ID'"
+  }'
+
+# Create task without description (optional field)
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "Setup CI/CD pipeline",
+    "status": "TODO",
+    "assigneeId": "'$USER_ID'"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "title": "Implement user authentication",
+    "description": "Add JWT-based authentication with refresh tokens",
+    "status": "TODO",
+    "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2025-11-04T19:00:00.000Z",
+    "updatedAt": "2025-11-04T19:00:00.000Z"
+  }
+}
+```
+
+**Save task ID:**
+```bash
+export TASK_ID="660e8400-e29b-41d4-a716-446655440001"
+```
+
+---
+
+### 2. Update Task - 🔒 PROTECTED
+**POST /task/update**
+
+```bash
+# Update status only
+curl -X POST http://localhost:3000/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'",
+    "status": "IN_PROGRESS"
+  }'
+
+# Update title and description
+curl -X POST http://localhost:3000/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'",
+    "title": "Implement OAuth2 authentication",
+    "description": "Add OAuth2 with Google and GitHub providers"
+  }'
+
+# Update multiple fields
+curl -X POST http://localhost:3000/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'",
+    "title": "Complete authentication system",
+    "status": "DONE",
+    "description": "Finished OAuth2 implementation with tests"
+  }'
+
+# Reassign task to different user
+curl -X POST http://localhost:3000/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'",
+    "assigneeId": "770e8400-e29b-41d4-a716-446655440002"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "title": "Implement OAuth2 authentication",
+    "description": "Add OAuth2 with Google and GitHub providers",
+    "status": "IN_PROGRESS",
+    "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2025-11-04T19:00:00.000Z",
+    "updatedAt": "2025-11-04T19:30:00.000Z"
+  }
+}
+```
+
+---
+
+### 3. Get Task by ID - 🔒 PROTECTED
+**POST /task/getById**
+
+```bash
+curl -X POST http://localhost:3000/task/getById \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "title": "Implement user authentication",
+    "description": "Add JWT-based authentication with refresh tokens",
+    "status": "TODO",
+    "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2025-11-04T19:00:00.000Z",
+    "updatedAt": "2025-11-04T19:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 4. Get All Tasks - 🔒 PROTECTED
+**POST /task/getAll**
+
+```bash
+curl -X POST http://localhost:3000/task/getAll \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "title": "Implement user authentication",
+      "description": "Add JWT-based authentication with refresh tokens",
+      "status": "TODO",
+      "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+      "createdAt": "2025-11-04T19:00:00.000Z",
+      "updatedAt": "2025-11-04T19:00:00.000Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440002",
+      "title": "Write API documentation",
+      "description": "Document all endpoints with examples",
+      "status": "IN_PROGRESS",
+      "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+      "createdAt": "2025-11-04T19:05:00.000Z",
+      "updatedAt": "2025-11-04T19:05:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 5. Fetch Tasks (Paginated) - 🔒 PROTECTED
+**POST /task/fetch**
+
+```bash
+# Basic pagination
+curl -X POST http://localhost:3000/task/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10
+  }'
+
+# Get page 2 with 20 items
+curl -X POST http://localhost:3000/task/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 2,
+    "limit": 20
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "title": "Implement user authentication",
+      "description": "Add JWT-based authentication with refresh tokens",
+      "status": "TODO",
+      "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+      "createdAt": "2025-11-04T19:00:00.000Z",
+      "updatedAt": "2025-11-04T19:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 6. Search Tasks (Advanced Filtering) - 🔒 PROTECTED
+**POST /task/search**
+
+```bash
+# Search by status - single status
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "status": "TODO"
+  }'
+
+# Search by multiple statuses
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "status": ["TODO", "IN_PROGRESS"]
+  }'
+
+# Search by assignee
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "assigneeId": "'$USER_ID'"
+  }'
+
+# Text search in title and description
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "text": "authentication"
+  }'
+
+# Search by date range
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "createdFrom": "2025-11-01T00:00:00.000Z",
+    "createdTo": "2025-11-30T23:59:59.999Z"
+  }'
+
+# Complex search with sorting
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 20,
+    "status": ["TODO", "IN_PROGRESS"],
+    "assigneeId": "'$USER_ID'",
+    "text": "API",
+    "sortBy": "createdAt",
+    "sortOrder": "desc"
+  }'
+
+# Sort by different fields
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "sortBy": "title",
+    "sortOrder": "asc"
+  }'
+
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "sortBy": "status",
+    "sortOrder": "desc"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "data": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "title": "Implement user authentication",
+      "description": "Add JWT-based authentication with refresh tokens",
+      "status": "TODO",
+      "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+      "createdAt": "2025-11-04T19:00:00.000Z",
+      "updatedAt": "2025-11-04T19:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 3,
+    "totalCount": 25,
+    "pageSize": 10,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
+}
+```
+
+---
+
+### 7. Delete Task - 🔒 PROTECTED
+**POST /task/remove**
+
+```bash
+curl -X POST http://localhost:3000/task/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "'$TASK_ID'"
+  }'
+```
+
+Expected Response:
+```json
+{
+  "success": true,
+  "id": "660e8400-e29b-41d4-a716-446655440001"
+}
+```
+
+---
+
+## 🧪 COMPLETE END-TO-END TEST WORKFLOW
+
+Run this complete workflow to test all endpoints in sequence:
+
+```bash
+#!/bin/bash
+
+# Configuration
+BASE_URL="http://localhost:3000"
+
+echo "🚀 Starting TODO API End-to-End Tests"
+echo "======================================"
+echo ""
+
+# 1. Register User (PUBLIC - No Auth Required)
+echo "📝 Step 1: Registering new user (PUBLIC endpoint)..."
+USER_RESPONSE=$(curl -s -X POST $BASE_URL/user/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "TestPass123!"
+  }')
+echo "✅ User registered: $USER_RESPONSE"
+USER_ID=$(echo $USER_RESPONSE | jq -r '.data.id')
+echo "   User ID: $USER_ID"
+echo ""
+
+# 2. Login to Get JWT Token (PUBLIC - To Be Implemented)
+echo "📝 Step 2: Logging in to get JWT token..."
+echo "⚠️  NOTE: /auth/login endpoint needs to be implemented"
+echo "   For now, you need to manually set TOKEN variable"
+echo "   Example: export TOKEN='your-jwt-token'"
+echo ""
+
+# Placeholder for login endpoint
+# LOGIN_RESPONSE=$(curl -s -X POST $BASE_URL/auth/login \
+#   -H "Content-Type: application/json" \
+#   -d '{
+#     "email": "test@example.com",
+#     "password": "TestPass123!"
+#   }')
+# TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
+
+# For testing, you can manually set a token here
+# TOKEN="your-jwt-token-here"
+
+if [ -z "$TOKEN" ]; then
+  echo "❌ ERROR: TOKEN environment variable not set"
+  echo "   Please run: export TOKEN='your-jwt-token'"
+  echo "   Exiting..."
+  exit 1
+fi
+
+echo "✅ Token retrieved"
+echo "   Token: ${TOKEN:0:20}..."
+echo ""
+
+# 3. Update User (PROTECTED - Requires Token)
+echo "📝 Step 3: Updating user (PROTECTED endpoint)..."
+curl -s -X POST $BASE_URL/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{
+    \"id\": \"$USER_ID\",
+    \"name\": \"Updated Test User\"
+  }" | jq '.'
+echo ""
+
+# 4. Create Task (PROTECTED - Requires Token)
+echo "📝 Step 4: Creating task (PROTECTED endpoint)..."
+TASK_RESPONSE=$(curl -s -X POST $BASE_URL/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{
+    \"title\": \"Test Task\",
+    \"description\": \"Testing the API\",
+    \"status\": \"TODO\",
+    \"assigneeId\": \"$USER_ID\"
+  }")
+echo "✅ Task created: $TASK_RESPONSE"
+TASK_ID=$(echo $TASK_RESPONSE | jq -r '.data.id')
+echo "   Task ID: $TASK_ID"
+echo ""
+
+# 5. Get Task by ID (PROTECTED - Requires Token)
+echo "📝 Step 5: Fetching task by ID..."
+curl -s -X POST $BASE_URL/task/getById \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"id\": \"$TASK_ID\"}" | jq '.'
+echo ""
+
+# 6. Update Task (PROTECTED - Requires Token)
+echo "📝 Step 6: Updating task status..."
+curl -s -X POST $BASE_URL/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{
+    \"id\": \"$TASK_ID\",
+    \"status\": \"IN_PROGRESS\"
+  }" | jq '.'
+echo ""
+
+# 7. Search Tasks (PROTECTED - Requires Token)
+echo "📝 Step 7: Searching tasks..."
+curl -s -X POST $BASE_URL/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{
+    \"page\": 1,
+    \"limit\": 10,
+    \"assigneeId\": \"$USER_ID\",
+    \"status\": [\"TODO\", \"IN_PROGRESS\"]
+  }" | jq '.'
+echo ""
+
+# 8. Get All Tasks (PROTECTED - Requires Token)
+echo "📝 Step 8: Fetching all tasks..."
+curl -s -X POST $BASE_URL/task/getAll \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+echo ""
+
+# 9. Get Users Paginated (PROTECTED - Requires Token)
+echo "📝 Step 9: Fetching users (paginated)..."
+curl -s -X POST $BASE_URL/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"page": 1, "limit": 10}' | jq '.'
+echo ""
+
+# 10. Complete Task (PROTECTED - Requires Token)
+echo "📝 Step 10: Completing task..."
+curl -s -X POST $BASE_URL/task/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{
+    \"id\": \"$TASK_ID\",
+    \"status\": \"DONE\"
+  }" | jq '.'
+echo ""
+
+# 11. Delete Task (PROTECTED - Requires Token)
+echo "📝 Step 11: Deleting task..."
+curl -s -X POST $BASE_URL/task/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"id\": \"$TASK_ID\"}" | jq '.'
+echo ""
+
+# 12. Delete User (PROTECTED - Requires Token)
+echo "📝 Step 12: Deleting user..."
+curl -s -X POST $BASE_URL/user/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"id\": \"$USER_ID\"}" | jq '.'
+echo ""
+
+echo "======================================"
+echo "✅ End-to-End Tests Complete!"
+echo ""
+echo "Summary:"
+echo "  - Created and deleted 1 user"
+echo "  - Created and deleted 1 task"
+echo "  - Tested all CRUD operations"
+echo "  - Tested pagination and search"
+echo "======================================"
+```
+
+---
+
+## 🔍 ERROR TESTING
+
+### Invalid User ID Format
+```bash
+curl -X POST http://localhost:3000/user/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "id": "not-a-valid-uuid"
+  }'
+```
+
+Expected Error:
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid user id"
+  }
+}
+```
+
+### Missing Required Fields
+```bash
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "John Doe"
+  }'
+```
+
+### Invalid Email Format
+```bash
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "John Doe",
+    "email": "not-an-email",
+    "password": "SecurePass123!"
+  }'
+```
+
+### Invalid Task Status
+```bash
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "Test Task",
+    "status": "INVALID_STATUS",
+    "assigneeId": "'$USER_ID'"
+  }'
+```
+
+### Invalid Date Range in Search
+```bash
+curl -X POST http://localhost:3000/task/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": 1,
+    "limit": 10,
+    "createdFrom": "2025-12-31T00:00:00.000Z",
+    "createdTo": "2025-01-01T00:00:00.000Z"
+  }'
+```
+
+### Invalid Pagination
+```bash
+curl -X POST http://localhost:3000/task/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "page": -1,
+    "limit": 0
+  }'
+```
+
+---
+
+## 📊 VALID VALUES REFERENCE
+
+### Task Status
+- `TODO`
+- `IN_PROGRESS`
+- `DONE`
+
+### Sort Order
+- `asc` (ascending)
+- `desc` (descending)
+
+### Task Sort Fields
+- `createdAt`
+- `updatedAt`
+- `title`
+- `status`
+
+### UUID Format
+- Valid: `550e8400-e29b-41d4-a716-446655440000`
+- Invalid: `not-a-uuid`, `123`, empty string
+
+### Pagination
+- `page`: Must be >= 1
+- `limit`: Must be >= 1 (typically 1-100)
+
+---
+
+## 🎯 QUICK REFERENCE
+
+### API Structure
+
+**All Routes Use:**
+- Method: `POST`
+- Headers: `Content-Type: application/json`
+- Protected routes also need: `Authorization: Bearer {token}`
+
+### Public Endpoints (No Auth Required) 🔓
+
+**User Registration:**
+- `/user/create` - Register new user account
+
+**Authentication (To Be Implemented):**
+- `/auth/login` - Login with email/password, returns JWT token
+
+### Protected Endpoints (JWT Required) 🔒
+
+**User Routes:**
+- `/user/update` - Update existing user
+- `/user/fetch` - Get users (paginated)
+- `/user/remove` - Delete user
+
+**Task Routes:**
+- `/task/create` - Create new task
+- `/task/update` - Update existing task
+- `/task/getById` - Get single task
+- `/task/getAll` - Get all tasks
+- `/task/fetch` - Get tasks (paginated)
+- `/task/search` - Advanced task search with filters
+- `/task/remove` - Delete task
+
+### Proper Usage Flow
+
+1. **Register** → `POST /user/create` (no auth)
+2. **Login** → `POST /auth/login` (no auth, returns token) ⚠️ TO BE IMPLEMENTED
+3. **Use API** → All other endpoints (requires token from step 2)
+
+---
+
+## 📝 TODO: Authentication Endpoint
+
+**You need to implement:**
+
+`POST /auth/login` endpoint that:
+- Accepts: `{ "email": "string", "password": "string" }`
+- Validates credentials against database
+- Compares hashed password
+- Returns: `{ "success": true, "token": "jwt-token", "user": {...} }`
+
+**Implementation suggestion:**
+- Create `/src/presentation/auth/auth.routes.ts`
+- Use existing JWT helper functions from `/src/presentation/auth/jwt.helper.ts`
+- Hash passwords using bcrypt or similar
+- Generate JWT with user ID, role, email in payload
+
+---
+
+**Note:** Replace `$TOKEN`, `$USER_ID`, and `$TASK_ID` with actual values from your authentication and API responses.
+
