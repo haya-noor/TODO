@@ -78,7 +78,7 @@ export const invalidDescriptionArbitrary = fc.oneof(
 );
 
 // Task status arbitrary
-export const taskStatusArbitrary = fc.constantFrom("TODO", "IN_PROGRESS", "DONE");
+export const taskStatusArbitrary: fc.Arbitrary<"TODO" | "IN_PROGRESS" | "DONE"> = fc.constantFrom("TODO", "IN_PROGRESS", "DONE");
 
 // Date arbitrary - constrained to valid dates only (no NaN or invalid dates)
 // Using integer timestamps to ensure valid dates and filtering out NaN

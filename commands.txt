@@ -1,0 +1,20 @@
+
+
+### Domain tests 
+
+mise run test:user-entity
+mise run test:user-guards
+mise run test:task-entity
+mise run test:task-guards
+mise run test:integration
+
+### Infrastructure tests 
+mise run test:user-repository
+mise run test:task-repository
+
+### Application tests 
+mise run test:task-dtos
+mise run test:task-workflows
+
+mise run test:user-dtos
+mise run test:user-workflows
