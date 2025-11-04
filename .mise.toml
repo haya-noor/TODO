@@ -11,5 +11,14 @@ node = "20"
 "test:user-repository" = "npx vitest run tests/infra.tests/user.repository.impl.test.ts"
 "test:task-repository" = "npx vitest run tests/infra.tests/task.repository.impl.test.ts"
 
+"test:task-dtos" = "npx vitest run tests/application.tests/task.application.tests/task.dtos.test.ts"
+"test:task-workflows" = "npx vitest run tests/application.tests/task.application.tests/task.workflows.test.ts"
+
+
+"test:user-dtos" = "npx vitest run tests/application.tests/user.application.tests/user.dtos.test.ts"
+"test:user-workflows" = "npx vitest run tests/application.tests/user.application.tests/user.workflows.test.ts"
+
+
+
 dev = "npm run dev"
 build = "npm run build"

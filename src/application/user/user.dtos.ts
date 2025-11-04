@@ -9,11 +9,8 @@ export const CreateUserDtoSchema = UserSchema.pick("name", "email", "password");
 
 // Update DTO: id required, other fields optional (partial update)
 export const UpdateUserDtoSchema = S.Struct({
-  id: UserSchema.fields.id,
-  name: S.optional(UserSchema.fields.name),
-  email: S.optional(UserSchema.fields.email),
-  password: S.optional(UserSchema.fields.password),
-});
+  id: UserSchema.fields.id,  })
+  .pipe( S.extend(S.partial(UserSchema.pick("name", "email", "password"))));
 
 // Remove DTO: id only
 export const RemoveUserDtoSchema = UserSchema.pick("id");

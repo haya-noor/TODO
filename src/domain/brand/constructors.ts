@@ -51,6 +51,7 @@ export const UUID = {
 
   /**
    * Generate a new random UUID
+   * Nominal is a constructor that creates a new UUID.
    */
   init: (): UUIDType => UUIDNominal(randomUUID()), 
 

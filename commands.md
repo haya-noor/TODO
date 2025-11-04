@@ -27,6 +27,14 @@ npm run db:generate
 mise run test:user-repository
 mise run test:task-repository
 
+### Application layer tests 
+mise run test:task-dtos
+mise run test:task-workflows
+
+mise run test:user-dtos
+mise run test:user-workflows
+
+
 
 
 # using 
