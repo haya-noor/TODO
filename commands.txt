@@ -1,20 +1,59 @@
+### 🗄️ Database Setup
 
+# Start PostgreSQL database
+docker-compose up -d postgres
 
-### Domain tests 
+# Push schema to database (creates tables)
+npx drizzle-kit push
 
+# Check database status
+docker ps | grep postgres
+
+### 🚀 Run Server
+
+# Development mode (with hot reload)
+npm run dev
+
+# Production mode
+npm run build
+npm start
+
+### 🧪 Run Tests
+
+# Domain tests 
 mise run test:user-entity
 mise run test:user-guards
 mise run test:task-entity
 mise run test:task-guards
 mise run test:integration
 
-### Infrastructure tests 
+# Infrastructure tests 
 mise run test:user-repository
 mise run test:task-repository
 
-### Application tests 
+# Application tests 
 mise run test:task-dtos
 mise run test:task-workflows
-
 mise run test:user-dtos
 mise run test:user-workflows
+
+### End points testing:
+
+# Start the database
+docker-compose up -d postgres
+
+# Verify it's running
+docker ps | grep postgres
+
+# Run database migration 
+# Apply schema to database (creates tables)
+npx drizzle-kit push
+
+# start your server 
+# Run the  server
+npm run dev
+OR 
+# tsx src/server.ts
+
+
+curl -X POST http://localhost:3000/user/create ...
