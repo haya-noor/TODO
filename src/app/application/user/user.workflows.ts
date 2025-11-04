@@ -1,4 +1,5 @@
 import { Effect as E, pipe, Option as O, Schema as S } from "effect";
+import { injectable, inject } from "tsyringe";
 
 import { User } from "../../domain/user/user.entity";
 import { UserRepository } from "../../domain/user/user.repository";
@@ -7,6 +8,7 @@ import type { PaginatedData } from "../../domain/utils/pagination";
 import { UUID, DateTime } from "../../domain/brand/constructors";
 import { UserIdSchema } from "../../domain/brand/ids";
 import type { SerializedUser } from "../../domain/user/user.schema";
+import { TOKENS } from "../../infra/di/tokens";
 
 import {
   CreateUserDtoSchema, UpdateUserDtoSchema, RemoveUserDtoSchema, UsersPaginationDtoSchema,
@@ -112,5 +114,39 @@ export const getUsersPaginated = (repo: UserRepository) => (input: unknown): E.E
         repo.fetchPaginated(options),
         E.mapError(() => new UserValidationError("Failed to fetch paginated users"))
 )));
+
+/**
+ * UserWorkflow Class
+ * Injectable workflow class that wraps functional workflows
+ * This allows workflows to be resolved from DI container with repository already injected
+ */
+@injectable()
+export class UserWorkflow {
+  constructor(@inject(TOKENS.USER_REPOSITORY) private readonly repo: UserRepository) {}
+
+  createUser(input: unknown): E.Effect<User, UserValidationError, never> {
+    return createUser(this.repo)(input);
+  }
+
+  updateUser(input: unknown): E.Effect<User, UserValidationError | UserNotFoundError, never> {
+    return updateUser(this.repo)(input);
+  }
+
+  deleteUserById(input: unknown): E.Effect<User, UserValidationError | UserNotFoundError, never> {
+    return deleteUserById(this.repo)(input);
+  }
+
+  getAllUsers(): E.Effect<User[], UserValidationError, never> {
+    return getAllUsers(this.repo);
+  }
+
+  getUserById(id: unknown): E.Effect<User, UserValidationError | UserNotFoundError, never> {
+    return getUserById(this.repo)(id);
+  }
+
+  getUsersPaginated(input: unknown): E.Effect<PaginatedData<User>, UserValidationError, never> {
+    return getUsersPaginated(this.repo)(input);
+  }
+}
 
 

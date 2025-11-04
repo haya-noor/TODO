@@ -11,9 +11,14 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@orpc/contract": "^1.10.3",
+    "@orpc/server": "^1.10.3",
     "drizzle-orm": "^0.36.0",
     "effect": "^3.18.4",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.0.0",

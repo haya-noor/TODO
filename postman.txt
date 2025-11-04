@@ -1,0 +1,70 @@
+
+ Complete Flow: Where authHeader Comes From
+
+
+ The flow is:
+Client sends HTTP request with header:
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+Node.js HTTP server extracts all headers from req.headers:
+   context: { headers: req.headers }
+
+oRPC route receives context with headers:
+   .$context<BaseContext>()  // BaseContext = { headers: IncomingHttpHeaders }
+
+Auth middleware extracts the Authorization header:
+   context.headers.authorization  // "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+
+JWT helper receives this as authHeader parameter:
+   extractTokenFromHeader(authHeader)
+   // authHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. CLIENT (Browser/Postman/API Client)                         │
+│    Sends HTTP Request:                                          │
+│    POST http://localhost:3000/user/create                       │
+│    Headers: {                                                   │
+│      Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."   │  ← JWT Token here!
+│    }                                                            │
+│    Body: { name: "John", email: "john@example.com" }          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. HTTP SERVER (Node.js - will be created in server.ts)        │
+│    const server = createServer(async (req, res) => {           │
+│      const handler = new RPCHandler(router, {...});            │
+│      await handler.handle(req, res, {                          │
+│        context: {                                              │
+│          headers: req.headers  ← Extracts headers from HTTP req│
+│        }                                                       │
+│      });                                                       │
+│    });                                                         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. ORPC ROUTE (user.routes.ts)                                 │
+│    export const create = os                                     │
+│      .$context<BaseContext>()  ← Gets { headers: req.headers } │
+│      .use(validateUser)                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. AUTH MIDDLEWARE (auth.middleware.ts)                        │
+│    validateUser({ context, next }) {                           │
+│      const token = extractTokenFromHeader(                     │
+│        context.headers.authorization  ← Headers from HTTP req  │
+│      );                                                        │
+│    }                                                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. JWT HELPER (jwt.helper.ts)                                  │
+│    extractTokenFromHeader(authHeader) {                        │
+│      // authHeader = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..." │
+│      const match = authHeader.match(/^Bearer\s+(.+)$/i);      │
+│      return match ? match[1] : null;                          │
+│      // Returns: "eyJhbGciOiJIUzI1NiIsInR5cCI6..."           │
+│    }                                                           │
+└─────────────────────────────────────────────────────────────────┘
