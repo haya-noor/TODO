@@ -39,12 +39,7 @@ export class TaskDrizzleRepository extends TaskRepository {
       })),
       E.mapError((error) => 
         new SerializationError(
-          `Failed to serialize task for database: ${error}`,
-          "Task",
-          task.id
-        )
-      )
-    );
+          `Failed to serialize task for database: ${error}`,"Task",task.id)));
   }
 
   /**
@@ -55,22 +50,11 @@ export class TaskDrizzleRepository extends TaskRepository {
       this.fetchById(id),
       E.flatMap((taskOption) =>
         O.match(taskOption, {
-          onNone: () => E.fail(new TaskMutationError(
-            "update",
-            "Task not found",
-            "Task",
-            id
-          )),
-          onSome: () => E.succeed(void 0)
-        })
-      ),
+          onNone: () => E.fail(new TaskMutationError("update","Task not found","Task",id)),
+          onSome: () => E.succeed(void 0)})),
       E.mapError((error) => 
-        error instanceof TaskMutationError
-          ? error
-          : new TaskMutationError("update", `Failed to check task existence: ${error}`, "Task", id)
-      )
-    );
-  }
+        error instanceof TaskMutationError ? error: new TaskMutationError("update", `Failed to check task existence: ${error}`, "Task", id)
+));}
 
   /**
    * Convert database row to Task entity

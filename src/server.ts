@@ -7,6 +7,34 @@ import { setupDI } from "./app/infra/di/setup";
 import * as UserRoutes from "./presentation/user.routes";
 import * as TaskRoutes from "./presentation/task.routes";
 
+import { createServer } from "http";
+import { handler } from "./router"; // <-- orrpc router
+import { createContext } from "./context"; // <-- custom ctx
+
+const server = createServer(async (req, res) => {
+  const result = await handler.handle(req, res, {
+    context: async () => createContext({ req, res }),
+  });
+
+  if (result) {
+    res.statusCode = result.status;
+    for (const [key, value] of Object.entries(result.headers ?? {})) {
+      res.setHeader(key, value);
+    }
+    res.end(result.body);
+  }
+});
+
+server.listen(3000, () => {
+  console.log("╔═══════════════════════════════════════╗");
+  console.log("║   TODO API Server Started!        ║");
+  console.log("╚═══════════════════════════════════════╝\n");
+  console.log(" Server:    http://localhost:3000");
+  console.log(" Auth:      JWT required (except /user/create)\n");
+});
+
+
+/*
 // Load environment variables from .env file
 config();
 
@@ -99,3 +127,4 @@ server.listen(PORT, HOST, () => {
 // Graceful shutdown
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
 process.on("SIGINT", () => server.close(() => process.exit(0)));
+*/

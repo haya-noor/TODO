@@ -21,9 +21,11 @@
 ## Getting Started - Complete Flow
 
 ### Step 1: Register a New User (PUBLIC - No Auth)
+
 ```bash
 curl -X POST http://localhost:3000/user/create \
 # Register a new user (no auth needed)
+
 curl -X POST http://localhost:3000/user/create \
   -H "Content-Type: application/json" \
   -d '{
