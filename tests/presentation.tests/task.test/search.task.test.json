@@ -1,0 +1,11 @@
+# Endpoint: POST /task/search
+# Basic search with pagination only (no text filter)
+
+{
+  "json": {
+    "page": 1,
+    "limit": 10
+  },
+  "meta": []
+}
+

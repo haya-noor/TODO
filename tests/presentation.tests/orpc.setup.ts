@@ -128,8 +128,8 @@ return new Promise<O>((resolve, reject) => {
 
     try {
       // oRPC Node expects the "json" transport envelope
-      // Format: {"json": {...input fields...}} (not {"json": {"input": {...}}})
-      const bodyString = JSON.stringify({ json: input });
+      // Format: {"json": {...input fields...}, "meta": []}
+      const bodyString = JSON.stringify({ json: input, meta: [] });
 
       const response = await fetch(`http://localhost:${port}${path}`, {
         method: "POST",

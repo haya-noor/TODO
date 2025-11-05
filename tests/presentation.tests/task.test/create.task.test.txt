@@ -1,0 +1,31 @@
+# Create Task - Requires JWT Token
+# Token from create user response
+
+TOKEN="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04YzEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig"
+USER_ID="2603b401-6357-4d89-8c13-3513e8c324f6"
+
+# Create task with all fields
+# Note: Description must be between 50-1000 characters
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"title\":\"Implement user authentication\",\"description\":\"Add JWT-based authentication with refresh tokens. This will include token generation, validation, and refresh mechanisms to ensure secure user sessions.\",\"status\":\"TODO\",\"assigneeId\":\"$USER_ID\"},\"meta\":[]}"
+
+# Create task without description (description is optional)
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"title\":\"Setup CI/CD pipeline\",\"status\":\"TODO\",\"assigneeId\":\"$USER_ID\"},\"meta\":[]}"
+
+# Create task with IN_PROGRESS status
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"title\":\"Write API documentation\",\"description\":\"Document all endpoints with examples including request/response formats, authentication requirements, error codes, and usage scenarios for each endpoint.\",\"status\":\"IN_PROGRESS\",\"assigneeId\":\"$USER_ID\"},\"meta\":[]}"
+
+# Create task with DONE status
+curl -X POST http://localhost:3000/task/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"title\":\"Complete project setup\",\"description\":\"All initial setup tasks completed including database configuration, environment variables, dependency installation, and initial project structure.\",\"status\":\"DONE\",\"assigneeId\":\"$USER_ID\"},\"meta\":[]}"
+

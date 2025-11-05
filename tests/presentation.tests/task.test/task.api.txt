@@ -1,0 +1,50 @@
+# Endpoint: POST /task/create
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+# Note: description is optional
+
+
+# Endpoint: POST /task/fetch
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+
+
+# Endpoint: POST /task/getAll
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+# Note: This endpoint requires no input, but oRPC envelope format still needed
+
+
+# Endpoint: POST /task/getById
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+
+
+# Endpoint: POST /task/remove
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+
+
+# Endpoint: POST /task/search
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+# Search by assignee
+
+
+# getAll
+{{baseUrl}}/task/getAll
+
+# getById
+{{baseUrl}}/task/getById
+
+#search task by assigneeId
+{{baseUrl}}/task/fetch
+
+# remove task by id
+{{baseUrl}}/task/remove
+
+# Endpoint: POST /task/search
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+# Complex search with multiple filters and sorting
+

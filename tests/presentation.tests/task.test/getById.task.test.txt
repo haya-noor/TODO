@@ -1,0 +1,12 @@
+# Get Task By ID - Requires JWT Token
+# Token from create user response
+
+TOKEN="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04YzEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig"
+TASK_ID="52561d68-0078-47db-9401-694ebf7ca9ba"
+
+# Get task by ID
+curl -X POST http://localhost:3000/task/getById \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$TASK_ID\"},\"meta\":[]}" | jq .
+

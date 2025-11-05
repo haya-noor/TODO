@@ -1,0 +1,30 @@
+# Update User - Requires JWT Token
+# Token and User ID from create user response
+
+TOKEN="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04YzEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig"
+USER_ID="2603b401-6357-4d89-8c13-3513e8c324f6"
+
+# Update user name only
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$USER_ID\",\"name\":\"Updated Name\"},\"meta\":[]}"
+
+# Update user email
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$USER_ID\",\"email\":\"updated@example.com\"},\"meta\":[]}"
+
+# Update user password
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$USER_ID\",\"password\":\"NewPassword#123\"},\"meta\":[]}"
+
+# Update multiple fields
+curl -X POST http://localhost:3000/user/update \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$USER_ID\",\"name\":\"Updated Name\",\"email\":\"updated@example.com\",\"password\":\"NewPassword#123\"},\"meta\":[]}"
+

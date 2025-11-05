@@ -1,1 +1,33 @@
-url -X POST http://localhost:3000/user/create -H "Content-Type: application/json" -d '{"json":{"name":"Admin","email":"aliceinb@test.com","password":"Secret#123","roles":["Admin"]}}' 
+# Create User - Returns JWT Token
+# This endpoint returns a JWT token that should be used for subsequent operations
+
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"name":"Admin","email":"aliceinb@test.com","password":"Secret#123"},"meta":[]}'
+
+# The response will include:
+# {
+#   "success": true,
+#   "data": { "id": "...", "name": "...", "email": "...", ... },
+#   "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0..."
+# }
+#
+# Extract the token and use it for other operations:
+# TOKEN=$(curl -s -X POST http://localhost:3000/user/create \
+#   -H "Content-Type: application/json" \
+#   -d '{"json":{"name":"Admin","email":"aliceinb@test.com","password":"Secret#123"},"meta":[]}' \
+#   | jq -r '.json.token')
+#
+# Then use it in subsequent requests:
+# curl -X POST http://localhost:3000/user/fetch \
+#   -H "Content-Type: application/json" \
+#   -H "Authorization: Bearer $TOKEN" \
+#   -d '{"json":{"page":1,"limit":10},"meta":[]}'
+
+
+
+
+Token:
+
+eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04Y        
+zEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig          

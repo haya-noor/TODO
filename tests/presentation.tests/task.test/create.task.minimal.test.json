@@ -1,0 +1,14 @@
+# Endpoint: POST /task/create
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+# Note: description is optional
+
+{
+  "json": {
+    "title": "Setup CI/CD pipeline",
+    "status": "TODO",
+    "assigneeId": "2603b401-6357-4d89-8c13-3513e8c324f6"
+  },
+  "meta": []
+}
+

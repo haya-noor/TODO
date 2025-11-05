@@ -6,6 +6,7 @@ import { createPaginatedDataSchema } from "../../domain/utils/pagination";
 export const UserResponseDtoSchema = S.Struct({
   success: S.Boolean,
   data: UserBasicViewDtoSchema, // Properly typed as User (without password)
+  token: S.optional(S.String), // JWT token (only included in create response)
 });
 
 // list response (fetch) with pagination 

@@ -1,0 +1,13 @@
+# Endpoint: POST /user/create
+# Public endpoint - No authentication required
+# Returns: { "success": true, "data": {...}, "token": "..." }
+
+
+# Endpoint: POST /user/fetch
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+
+
+# Endpoint: POST /user/remove 
+
+# Endpoint : POST /user/remove

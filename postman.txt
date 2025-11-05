@@ -2,6 +2,19 @@
 
 **Base URL:** http://localhost:3000
 
+**⚠️ IMPORTANT: Request Format**
+All oRPC requests must use the envelope format:
+```json
+{
+  "json": {
+    // Your actual data here
+  },
+  "meta": []
+}
+```
+
+The `meta` field is required and should be an empty array `[]` for standard requests.
+
 ---
 
 ## 🔐 Authentication Flow
@@ -29,9 +42,12 @@ curl -X POST http://localhost:3000/user/create \
 curl -X POST http://localhost:3000/user/create \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "SecurePass123!"
+    "json": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "password": "SecurePass123!"
+    },
+    "meta": []
   }'
 ```
 
@@ -72,15 +88,18 @@ export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 **⚠️ NO AUTHENTICATION REQUIRED** - This is a public registration endpoint
 
-**Note:** oRPC uses direct path routing (e.g., `/user/create`), not `/rpc/user.create`. The request body should be sent directly as JSON, not wrapped in an `input` key.
+**Note:** oRPC uses direct path routing (e.g., `/user/create`), not `/rpc/user.create`. The request body must be wrapped in the oRPC envelope format: `{ "json": {...}, "meta": [] }`.
 
 ```bash
 curl -X POST http://localhost:3000/user/create \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "SecurePass123!"
+    "json": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "password": "SecurePass123!"
+    },
+    "meta": []
   }'
 ```
 
@@ -116,8 +135,11 @@ curl -X POST http://localhost:3000/user/update \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "id": "'$USER_ID'",
-    "name": "John Updated Doe"
+    "json": {
+      "id": "'$USER_ID'",
+      "name": "John Updated Doe"
+    },
+    "meta": []
   }'
 
 # Update email and password
@@ -125,9 +147,12 @@ curl -X POST http://localhost:3000/user/update \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "id": "'$USER_ID'",
-    "email": "john.updated@example.com",
-    "password": "NewSecurePass456!"
+    "json": {
+      "id": "'$USER_ID'",
+      "email": "john.updated@example.com",
+      "password": "NewSecurePass456!"
+    },
+    "meta": []
   }'
 
 # Update all fields
@@ -135,10 +160,13 @@ curl -X POST http://localhost:3000/user/update \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "id": "'$USER_ID'",
-    "name": "John Completely Updated",
-    "email": "john.new@example.com",
-    "password": "AnotherPass789!"
+    "json": {
+      "id": "'$USER_ID'",
+      "name": "John Completely Updated",
+      "email": "john.new@example.com",
+      "password": "AnotherPass789!"
+    },
+    "meta": []
   }'
 ```
 
@@ -253,10 +281,13 @@ curl -X POST http://localhost:3000/task/create \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "title": "Implement user authentication",
-    "description": "Add JWT-based authentication with refresh tokens",
-    "status": "TODO",
-    "assigneeId": "'$USER_ID'"
+    "json": {
+      "title": "Implement user authentication",
+      "description": "Add JWT-based authentication with refresh tokens",
+      "status": "TODO",
+      "assigneeId": "'$USER_ID'"
+    },
+    "meta": []
   }'
 
 # Create another task with different status

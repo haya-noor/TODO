@@ -1,0 +1,29 @@
+# Fetch Users (Paginated) - Requires JWT Token
+# Token from create user response
+
+TOKEN="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04YzEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig"
+
+# Fetch first page with default limit (10 items)
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"page\":1,\"limit\":10},\"meta\":[]}"
+
+# Fetch second page with 20 items per page
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"page\":2,\"limit\":20},\"meta\":[]}"
+
+# Fetch with custom limit
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"page\":1,\"limit\":5},\"meta\":[]}"
+
+# Fetch with sorting (optional)
+curl -X POST http://localhost:3000/user/fetch \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"page\":1,\"limit\":10,\"sortBy\":\"createdAt\",\"sortOrder\":\"desc\"},\"meta\":[]}"
+

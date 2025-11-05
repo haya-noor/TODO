@@ -1,3 +1,5 @@
+import "reflect-metadata";
+import { injectable } from "tsyringe";
 import { Effect as E, pipe, Option as O } from "effect";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { UserRepository } from "@domain/user/user.repository";
@@ -18,6 +20,7 @@ type DrizzleDB = any;
 /**
  * Drizzle-based implementation of UserRepository
  */
+@injectable()
 export class UserDrizzleRepository extends UserRepository {
   constructor(private readonly db: DrizzleDB) {
     super();
@@ -73,7 +76,7 @@ export class UserDrizzleRepository extends UserRepository {
         E.tryPromise({
           try: () => this.db.insert(users).values(dbData),
           catch: (error) => new UserMutationError("add", `Failed to add user: ${error}`, "User", entity.id)})
-      ),
+        ),
       E.as(entity),
       E.mapError((error) =>
         error instanceof UserMutationError || error instanceof SerializationError

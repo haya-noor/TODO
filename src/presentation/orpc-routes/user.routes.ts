@@ -2,6 +2,7 @@ import { os } from "@orpc/server";
 import { resolve, TOKENS } from "@infra/di/container";
 import { UserWorkflow } from "@application/user/user.workflows";
 import { validateUser, type BaseContext, type AuthenticatedContext } from "../auth/auth.middleware";
+import { generateJWT } from "../auth/jwt.helper";
 import { withActor, executeEffect, serializeEntity, toStandard } from "./route.utils";
 import * as UserDTOs from "@application/user/user.dtos";
 import * as UserResponseDTOs from "@application/user/user.response.dto";
@@ -79,9 +80,21 @@ export const create = os
     // Execute the workflow - no need to enrich with actor info since user doesn't exist yet
     const result = await executeEffect(workflow.createUser(input));
     
+    // Serialize user (remove password from response)
+    const serializedUser = await serializeUser(result);
+    
+    // Generate JWT token for the newly created user
+    // Default role is "assignee" - you can update this based on your business logic
+    const token = generateJWT(
+      serializedUser.id,
+      serializedUser.email,
+      "assignee" // Default role for new users
+    );
+    
     return {
       success: true,
-      data: await serializeUser(result),
+      data: serializedUser,
+      token, // Include JWT token in response
     };
   });
 

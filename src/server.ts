@@ -18,8 +18,6 @@ setupDI();
 
 const server = createServer(async (req, res) => {
   try {
-    console.log(`[${req.method}] ${req.url}`);
-    
     // Create context synchronously - oRPC will read the body stream itself
     const context = createContext({ req, res });
     
@@ -42,13 +40,16 @@ const server = createServer(async (req, res) => {
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
+      // Log the full error object for debugging
+      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     }
     if (!res.headersSent) {
       res.statusCode = 500;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ 
         error: "Internal server error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.stack : undefined
       }));
     }
   }

@@ -1,3 +1,5 @@
+import "reflect-metadata";
+import { injectable } from "tsyringe";
 import { Effect as E, pipe, Option as O } from "effect";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { TaskRepository } from "@domain/task/task.repository";
@@ -17,6 +19,7 @@ type DrizzleDB = any;
 /**
  * Drizzle-based implementation of TaskRepository
  */
+@injectable()
 export class TaskDrizzleRepository extends TaskRepository {
   constructor(private readonly db: DrizzleDB) {
     super();

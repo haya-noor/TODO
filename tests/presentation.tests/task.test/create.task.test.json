@@ -1,0 +1,9 @@
+{
+  "json": {
+    "title": "Implement user authentication",
+    "description": "Add JWT-based authentication with refresh tokens. This will include token generation, validation, and refresh mechanisms to ensure secure user sessions.",
+    "status": "TODO",
+    "assigneeId": "2603b401-6357-4d89-8c13-3513e8c324f6"
+  },
+  "meta": []
+}

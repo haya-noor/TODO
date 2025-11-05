@@ -1,0 +1,12 @@
+# Endpoint: POST /task/update
+# Protected endpoint - Requires JWT token in Authorization header
+# Header: Authorization: Bearer <token>
+
+{
+  "json": {
+    "id": "52561d68-0078-47db-9401-694ebf7ca9ba",
+    "description": "Updated description with more details about the task requirements, implementation approach, and expected outcomes. This provides comprehensive context for the development team."
+  },
+  "meta": []
+}
+

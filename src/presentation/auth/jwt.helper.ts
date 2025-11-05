@@ -1,5 +1,6 @@
-// Handles JWT token parsing and extraction
+// Handles JWT token parsing, extraction, and generation
 // decodes payload from JWT token  
+// generates JWT tokens for authenticated users
 
 export interface JWTPayload {
   userId?: string;
@@ -59,5 +60,53 @@ export const extractTokenFromHeader = (authHeader?: string | string[]): string |
   const match = headerValue.match(/^Bearer\s+(.+)$/i);
 
   return match ? match[1] : null;
+};
+
+/**
+ * Generate JWT token for a user
+ * Creates a JWT token with user information in the payload
+ * 
+ * @param userId - User ID
+ * @param email - User email
+ * @param role - User role (defaults to "assignee")
+ * @returns JWT token string
+ * 
+ * Note: This implementation uses "none" algorithm for simplicity.
+ * In production, you should use a proper signing algorithm (HS256, RS256, etc.)
+ * and verify tokens with a secret key.
+ */
+export const generateJWT = (
+  userId: string,
+  email?: string,
+  role: "assignee" | "admin" = "assignee"
+): string => {
+  // Create JWT header
+  const header = {
+    alg: "none",
+    typ: "JWT"
+  };
+
+  // Create JWT payload with user information
+  const payload: JWTPayload = {
+    userId,
+    id: userId,
+    role,
+    email
+  };
+
+  // Encode header and payload to base64url
+  const encodeBase64Url = (obj: object): string => {
+    return Buffer.from(JSON.stringify(obj))
+      .toString("base64url");
+  };
+
+  const encodedHeader = encodeBase64Url(header);
+  const encodedPayload = encodeBase64Url(payload);
+
+  // Create token (no signature for "none" algorithm)
+  // Format: header.payload.signature
+  const token = `${encodedHeader}.${encodedPayload}.sig`;
+
+  return token;
 };
 

@@ -1,0 +1,13 @@
+# Endpoint: POST /task/search
+# Text search in title and description
+# This is the only filter currently implemented in the search endpoint
+
+{
+  "json": {
+    "page": 1,
+    "limit": 10,
+    "text": "authentication"
+  },
+  "meta": []
+}
+

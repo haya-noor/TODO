@@ -39,6 +39,21 @@ mise run test:user-workflows
 
 ### End points testing:
 
+# ⚠️ IMPORTANT: oRPC Request Format
+# All curl requests must use the envelope format:
+# {
+#   "json": { ...your data... },
+#   "meta": []
+# }
+
+# Example correct curl command (without roles field - schema only expects name, email, password):
+curl -X POST http://localhost:3000/user/create \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"name":"Admin","email":"test@test.com","password":"Secret#123"},"meta":[]}'
+
+# NOTE: The CreateUserDtoSchema only expects: name, email, password
+# Extra fields like "roles" are not part of the schema and may cause validation errors
+
 # Start the database
 docker compose up
 
@@ -57,9 +72,6 @@ npx drizzle-kit push
 npm run dev
 mise run dev 
 
-
-# all postman/orpc tests
-mise run test:postman
 
 # or single spec
 ## User presentation layer tests 

@@ -1,0 +1,11 @@
+# Remove User - Requires JWT Token
+# Token and User ID from create user response
+
+TOKEN="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOiIyNjAzYjQwMS02MzU3LTRkODktOGMxMy0zNTEzZThjMzI0ZjYiLCJpZCI6IjI2MDNiNDAxLTYzNTctNGQ4OS04YzEzLTM1MTNlOGMzMjRmNiIsInJvbGUiOiJhc3NpZ25lZSIsImVtYWlsIjoiYWxpY2VpbmJAdGVzdC5jb20ifQ.sig"
+USER_ID="2603b401-6357-4d89-8c13-3513e8c324f6"
+
+curl -X POST http://localhost:3000/user/remove \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"json\":{\"id\":\"$USER_ID\"},\"meta\":[]}"
+

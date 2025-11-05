@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     pull_policy: never  # Use existing local image, never pull from registry
     container_name: todo_postgres
     environment:
@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
 
   postgres_test:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     pull_policy: never  # Use existing local image, never pull from registry
     container_name: todo_postgres_test
     environment:

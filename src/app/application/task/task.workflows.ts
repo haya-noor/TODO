@@ -66,7 +66,11 @@ repo.update(updated) will replace the old entity with the new one.
 export const updateTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> => 
     pipe(
     S.decodeUnknown(UpdateTaskDtoSchema)(input),
-    E.mapError(() => new TaskValidationError("Invalid update task input", "task", input)),
+    E.mapError((error) => {
+      console.error("[WORKFLOW] Update task - DTO validation error:", error);
+      console.error("[WORKFLOW] Update task - Input:", JSON.stringify(input, null, 2));
+      return new TaskValidationError("Invalid update task input", "task", input);
+    }),
     E.flatMap((dto: UpdateTaskDto) =>
       pipe(
         // fetch the task from the database (ensures the task exists)
@@ -81,17 +85,36 @@ export const updateTask = (repo: TaskRepository) => (input: unknown): E.Effect<T
             )})
         ),
         // update the task with the new values 
-        E.map((current: SerializedTask) => ({ 
-          ...current, 
-          ...dto, 
-          updatedAt: DateTime.now() 
-        })),
+        // Merge current task with DTO fields - only update fields that are provided in DTO
+        E.map((current: SerializedTask) => {
+          // Helper to encode Option objects into plain values using Schema.encodeSync
+          // because the DTO validation returns Option objects, we need to encode them into
+          //  plain values , we need plain values to update the task.
+          const encodeField = <T>(fieldSchema: S.Schema<T, any>, value: any): T => {
+            if (typeof value === 'object' && value !== null && '_id' in value && value._id === 'Option') {
+              return S.encodeSync(fieldSchema)(value);
+            }
+            return value;
+          };
+          
+          const updated: SerializedTask = {
+            ...current,
+            ...(dto.title !== undefined && { title: encodeField(TaskSchema.fields.title, dto.title) }),
+            ...(dto.description !== undefined && { description: encodeField(TaskSchema.fields.description, dto.description) }),
+            ...(dto.status !== undefined && { status: encodeField(TaskSchema.fields.status, dto.status) }),
+            ...(dto.assigneeId !== undefined && { assigneeId: encodeField(TaskSchema.fields.assigneeId, dto.assigneeId) }),
+            updatedAt: DateTime.now()
+          };
+          
+          return updated;
+        }),
         E.flatMap((nextSerialized) => Task.create(nextSerialized)),
         E.mapError(() => new TaskValidationError("Invalid task update payload", "task", input)),
         E.flatMap((updated) => pipe(
           repo.update(updated),
           E.mapError(() => new TaskNotFoundError(String(dto.id)))
 )))));
+
 
 
 
