@@ -23,9 +23,17 @@ dev = "npm run dev"
 build = "npm run build"
 
 
-# oRPC + Postman-style tests
-"test:postman"           = "npx vitest run tests/postman/**/*.test.ts"
-"test:postman:create"    = "npx vitest run tests/postman/user.test/create.user.test.ts"
-"test:postman:update"    = "npx vitest run tests/postman/user.test/update.user.test.ts"
-"test:postman:remove"    = "npx vitest run tests/postman/user.test/remove.user.test.ts"
-"test:postman:search"    = "npx vitest run tests/postman/user.test/search.user.test.ts"
+# oRPC user tests
+"test:presentation"           = "npx vitest run tests/presentation.tests/**/*.test.ts"
+"test:createUser"    = "npx vitest run tests/presentation.tests/user.test/create.user.test.ts"
+"test:updateUser"    = "npx vitest run tests/presentation.tests/user.test/update.user.test.ts"
+"test:removeUser"    = "npx vitest run tests/presentation.tests/user.test/remove.user.test.ts"
+"test:searchUser"    = "npx vitest run tests/presentation.tests/user.test/search.user.test.ts"
+
+# oRPC task tests 
+"test:createTask"    = "npx vitest run tests/presentation.tests/task.test/create.task.test.ts"
+"test:updateTask"    = "npx vitest run tests/presentation.tests/task.test/update.task.test.ts"
+"test:removeTask"    = "npx vitest run tests/presentation.tests/task.test/remove.task.test.ts"
+"test:searchTask"    = "npx vitest run tests/presentation.tests/task.test/search.task.test.ts"
+"test:searchAllTasks"= "npx vitest run tests/presentation.tests/task.test/searchAll.task.test.ts"
+"test:searchTaskById"= "npx vitest run tests/presentation.tests/task.test/searchById.task.test.ts"

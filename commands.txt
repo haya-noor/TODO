@@ -62,7 +62,17 @@ mise run dev
 mise run test:postman
 
 # or single spec
-mise run test:postman:create
-mise run test:postman:update
-mise run test:postman:remove
-mise run test:postman:search
+## User presentation layer tests 
+mise run test:createUser
+mise run test:updateUser
+mise run test:removeUser
+mise run test:searchUser
+
+
+## Task presentation layer tests
+mise run test:createTask 
+mise run test:updateTask 
+mise run test:removeTask 
+mise run test:searchTask 
+mise run test:searchAllTasks
+mise run test:searchTaskById 

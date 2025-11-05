@@ -44,7 +44,17 @@ export const withActor = (input: any, context: any) => ({
  * This executeEffect function is used to execute any effect and return the result.
  */
 export const executeEffect = async <T>(effect: E.Effect<T, any, never>): Promise<T> => {
-  return await E.runPromise(effect);
+  try {
+    return await E.runPromise(effect);
+  } catch (error) {
+    // Log Effect errors for debugging
+    console.error("Effect execution error:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    throw error;
+  }
 };
 
 /**

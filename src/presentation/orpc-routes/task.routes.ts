@@ -1,4 +1,5 @@
 import { os } from "@orpc/server";
+import { Schema as S } from "effect";
 import { resolve, TOKENS } from "@infra/di/container";
 import { TaskWorkflow } from "@application/task/task.workflows";
 import { validateUser, type BaseContext, type AuthenticatedContext } from "../auth";
@@ -53,11 +54,12 @@ export const create = os
     // Get the TaskWorkflow instance from the dependency injection container, which is injected by the DI container
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
     
-    // Enrich input with actor info (e.g., user ID, role) using the context
-    const command = withActor(input, context);
+    // Encode input from DTO schema back to wire (raw) format before passing to workflow since workflow expects to decode 
+    // raw input
+    const encodedInput = await executeEffect(S.encode(TaskDTOs.CreateTaskDtoSchema)(input));
     
-    // Execute the workflow
-    const result = await executeEffect(workflow.createTask(command));
+    // Execute the workflow with input (workflow doesn't need actor info for creation)
+    const result = await executeEffect(workflow.createTask(encodedInput));
     
     return {
       success: true,
@@ -128,8 +130,10 @@ export const getById = os
   .use(validateUser)
   .handler(async ({ input, context }): Promise<TaskResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
-    const query = withActor(input, context); // QUERY - reads state
-    const result = await executeEffect(workflow.getTaskById(query));
+    // Encode input from DTO schema back to wire format before passing to workflow 
+    // since workflow expects to decode raw input
+    const encodedInput = await executeEffect(S.encode(TaskDTOs.RemoveTaskDtoSchema)(input));
+    const result = await executeEffect(workflow.getTaskById(encodedInput.id));
     
     return {
       success: true,

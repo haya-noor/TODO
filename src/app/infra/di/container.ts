@@ -28,6 +28,7 @@ export function registerRepository<T>
 }
 
 /**
+ * Used for testing purposes
  * Register a repository with a factory function
  * Useful for test scenarios where you need to provide specific dependencies (e.g., database instance)
  * @param token - The DI token
