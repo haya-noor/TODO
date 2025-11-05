@@ -107,6 +107,9 @@ return new Promise<O>((resolve, reject) => {
         res.setHeader("Content-Type", "application/json");
         // Log the actual error for debugging
         console.error("Test server error:", error);
+        if (error instanceof Error) {
+          console.error("Error stack:", error.stack);
+        }
         res.end(JSON.stringify({ 
           error: "Internal server error",
           details: error instanceof Error ? error.message : String(error)

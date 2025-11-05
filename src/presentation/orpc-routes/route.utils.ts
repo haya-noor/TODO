@@ -42,18 +42,24 @@ export const withActor = (input: any, context: any) => ({
  * output: T - the result of the effect
  * 
  * This executeEffect function is used to execute any effect and return the result.
+ * Effect wraps errors in FiberFailure, so we extract the actual error.
  */
 export const executeEffect = async <T>(effect: E.Effect<T, any, never>): Promise<T> => {
   try {
     return await E.runPromise(effect);
-  } catch (error) {
+  } catch (error: any) {
+    // Effect wraps errors in FiberFailure, need to extract the actual error
+    const actualError = error?.cause?.failure || error;
+    
     // Log Effect errors for debugging
-    console.error("Effect execution error:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
+    console.error("Effect execution error:", actualError);
+    if (actualError instanceof Error) {
+      console.error("Error message:", actualError.message);
+      console.error("Error stack:", actualError.stack);
     }
-    throw error;
+    
+    // Throw the actual error so it can be properly handled upstream
+    throw actualError;
   }
 };
 
