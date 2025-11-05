@@ -23,23 +23,16 @@ export class TaskDrizzleRepository extends TaskRepository {
   }
 
   /**
-   * Convert Task entity to database-serialized format
+   * Convert SerializedTask to database format
+   * Input: SerializedTask (already serialized)
+   * Output: Database-ready format (in this case, same as SerializedTask)
+   * why not the E.mapError to handle the SerializationError?
+   * because the SerializedTask is already in the correct format, so we don't need to 
+   * serialize it again
+   * and the caller(add, update, etc.) will handle the SerializationError if it occurs
    */
-  private toDbSerialized(task: Task): E.Effect<any, SerializationError, never> {
-    return pipe(
-      task.serialized(),
-      E.map((serialized) => ({
-        id: serialized.id,
-        title: serialized.title,
-        description: serialized.description,
-        status: serialized.status,
-        assigneeId: serialized.assigneeId,
-        createdAt: serialized.createdAt,
-        updatedAt: serialized.updatedAt,
-      })),
-      E.mapError((error) => 
-        new SerializationError(
-          `Failed to serialize task for database: ${error}`,"Task",task.id)));
+  private toDbSerialized(serialized: SerializedTask): E.Effect<SerializedTask, SerializationError, never> {
+    return E.succeed(serialized);
   }
 
   /**
@@ -58,27 +51,15 @@ export class TaskDrizzleRepository extends TaskRepository {
 
   /**
    * Convert database row to Task entity
+   * input: any - database row
+   * output: Task entity or error
+   * DB row -> task entity (using Task.create)
    */
   private fromDbRow(row: any): E.Effect<Task, DeserializationError, never> {
-    const serialized: SerializedTask = {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      status: row.status,
-      assigneeId: row.assigneeId,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
     return pipe(
-      Task.create(serialized),
+      Task.create(row as SerializedTask),
       E.mapError((error) =>
-        new DeserializationError(
-          `Failed to deserialize task from database: ${error}`,
-          "Task",
-          row
-        )
-      )
-    );
+        new DeserializationError(`Failed to deserialize task from database: ${error}`, "Task", row)));
   }
 
   /**
@@ -86,7 +67,8 @@ export class TaskDrizzleRepository extends TaskRepository {
    */
   add(entity: Task): RepositoryEffect<Task, MutationError> {
     return pipe(
-      this.toDbSerialized(entity),
+      entity.serialized(),
+      E.flatMap((serialized) => this.toDbSerialized(serialized)),
       E.flatMap((dbData) =>
         E.tryPromise({
           try: () => this.db.insert(tasks).values(dbData),
@@ -98,7 +80,11 @@ export class TaskDrizzleRepository extends TaskRepository {
           )
         })
       ),
-      E.as(entity)
+      E.as(entity),
+      E.mapError((error) =>
+        error instanceof TaskMutationError || error instanceof SerializationError
+          ? error as MutationError : new TaskMutationError("add", `Failed to add task: ${error}`, "Task", entity.id)
+      )
     );
   }
 
@@ -108,23 +94,16 @@ export class TaskDrizzleRepository extends TaskRepository {
   update(entity: Task): RepositoryEffect<Task, MutationError> {
     return pipe(
       this.ensureExists(entity.id),
-      E.flatMap(() => this.toDbSerialized(entity)),
-      E.flatMap((dbData) =>
-        E.tryPromise({
+      E.flatMap(() => entity.serialized()),
+      E.flatMap((serialized) => this.toDbSerialized(serialized)),
+      E.flatMap((dbData) => E.tryPromise({
           try: () => this.db.update(tasks).set(dbData).where(eq(tasks.id, entity.id)),
-          catch: (error) => new TaskMutationError(
-            "update",
-            `Failed to update task: ${error}`,
-            "Task",
-            entity.id
-          )
-        })
+          catch: (error) => new TaskMutationError( "update", `Failed to update task: ${error}`, "Task", entity.id)})
       ),
       E.as(entity),
       E.mapError((error) => 
         error instanceof TaskMutationError || error instanceof SerializationError
-          ? error as MutationError
-          : new TaskMutationError("update", `Failed to update task: ${error}`, "Task", entity.id)
+          ? error as MutationError : new TaskMutationError("update", `Failed to update task: ${error}`, "Task", entity.id)
       )
     );
   }

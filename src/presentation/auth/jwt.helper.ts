@@ -1,5 +1,5 @@
 // Handles JWT token parsing and extraction
- 
+// decodes payload from JWT token  
 
 export interface JWTPayload {
   userId?: string;

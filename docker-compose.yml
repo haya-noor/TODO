@@ -1,8 +1,8 @@
 services:
-  # Development PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
-    container_name: todo_postgres_dev
+    image: postgres:15-alpine
+    pull_policy: never  # Use existing local image, never pull from registry
+    container_name: todo_postgres
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -16,10 +16,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Test PostgreSQL Database
   postgres_test:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
+    pull_policy: never  # Use existing local image, never pull from registry
     container_name: todo_postgres_test
     environment:
       POSTGRES_USER: testuser
@@ -34,8 +35,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   postgres_test_data:
-

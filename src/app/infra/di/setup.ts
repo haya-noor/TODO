@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { registerRepository, registerWorkflow } from "./container";
+import { registerRepository, registerWorkflow, registerRepositoryWithFactory } from "./container";
 import { TaskDrizzleRepository } from "../repository/task.repository.impl";
 import { UserDrizzleRepository } from "../repository/user.repository.impl";
 import { TaskWorkflow } from "../../application/task/task.workflows";
@@ -19,5 +19,20 @@ export function setupDI(): void {
   // Register Workflows
   registerWorkflow(TOKENS.TASK_WORKFLOW, TaskWorkflow);
   registerWorkflow(TOKENS.USER_WORKFLOW, UserWorkflow);
+}
+
+/**
+ * Setup Dependency Injection Container for tests
+ * Registers workflows and repositories with factory functions to provide database instances
+ * @param db - The database instance to use for repositories
+ */
+export function setupDITest(db: any): void {
+  // Register Workflows (same as production setup)
+  registerWorkflow(TOKENS.TASK_WORKFLOW, TaskWorkflow);
+  registerWorkflow(TOKENS.USER_WORKFLOW, UserWorkflow);
+
+  // Register Repositories with factory functions to provide database instance
+  registerRepositoryWithFactory(TOKENS.USER_REPOSITORY, () => new UserDrizzleRepository(db));
+  registerRepositoryWithFactory(TOKENS.TASK_REPOSITORY, () => new TaskDrizzleRepository(db));
 }
 

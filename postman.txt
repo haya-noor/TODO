@@ -38,6 +38,7 @@ curl -X POST http://localhost:3000/user/create \
 ### Step 2: Login to Get JWT Token (TO BE IMPLEMENTED)
 ```bash
 # This endpoint needs to be implemented in /auth/login
+
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{

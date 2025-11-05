@@ -1,15 +1,15 @@
 import { os } from "@orpc/server";
-import { resolve, TOKENS } from "../app/infra/di/container";
-import { UserWorkflow } from "../app/application/user/user.workflows";
-import { validateUser, type BaseContext, type AuthenticatedContext } from "./auth";
+import { resolve, TOKENS } from "@infra/di/container";
+import { UserWorkflow } from "@application/user/user.workflows";
+import { validateUser, type BaseContext, type AuthenticatedContext } from "../auth/auth.middleware";
 import { withActor, executeEffect, serializeEntity, toStandard } from "./route.utils";
-import * as UserDTOs from "../app/application/user/user.dtos";
-import * as UserResponseDTOs from "../app/application/user/user.response.dto";
+import * as UserDTOs from "@application/user/user.dtos";
+import * as UserResponseDTOs from "@application/user/user.response.dto";
 import type { 
   UserResponseDto, 
   UsersListResponseDto, 
   UserRemoveResponseDto 
-} from "../app/application/user/user.response.dto";
+} from "@application/user/user.response.dto";
 
 /**
  * User Routes

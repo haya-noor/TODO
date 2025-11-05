@@ -1,0 +1,25 @@
+echo "{\"json\":{\"id\":\"$ID\",\"name\":\"Alice Updated\"}}" \
+| curl -sS -X POST "$BASE_URL/rpc/user/update" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    --data-binary @- \
+| jq
+
+
+(Negative) Update with assignee token should fail (unauthorized)
+echo "{\"json\":{\"id\":\"$ID\",\"name\":\"Should Fail\"}}" \
+| curl -sS -X POST "$BASE_URL/rpc/user/update" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ASSIGNEE_TOKEN" \
+    --data-binary @- \
+| jq
+
+(Negative) Update with invalid id should fail
+echo '{"json":{"id":"not-a-uuid","name":"X"}}' \
+| curl -sS -X POST "$BASE_URL/rpc/user/update" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    --data-binary @- \
+| jq
+
+

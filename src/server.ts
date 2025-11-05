@@ -1,27 +1,41 @@
+
+/* 
+Main server entry point
+Uses handler from router.ts
+Uses createContext from context.ts
+Creates HTTP server and connects it to oRPC handler
+*/
+
 import "reflect-metadata";
 import { config } from "dotenv";
 import { createServer } from "node:http";
-import { RPCHandler } from "@orpc/server/node";
-import { os } from "@orpc/server";
+import { handler } from "./router";
+import { createContext } from "./context";
 import { setupDI } from "./app/infra/di/setup";
-import * as UserRoutes from "./presentation/user.routes";
-import * as TaskRoutes from "./presentation/task.routes";
 
-import { createServer } from "http";
-import { handler } from "./router"; // <-- orrpc router
-import { createContext } from "./context"; // <-- custom ctx
+config();
+setupDI();
 
 const server = createServer(async (req, res) => {
-  const result = await handler.handle(req, res, {
-    context: async () => createContext({ req, res }),
-  });
+  try {
+    const result = await handler.handle(req, res, {
+      context: createContext({ req, res }),
+    });
 
-  if (result) {
-    res.statusCode = result.status;
-    for (const [key, value] of Object.entries(result.headers ?? {})) {
-      res.setHeader(key, value);
+    // If no route matched, send 404
+    if (!result.matched) {
+      res.statusCode = 404;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Not found" }));
     }
-    res.end(result.body);
+    // If matched, the handler already wrote the response
+  } catch (error) {
+    console.error("Server error:", error);
+    if (!res.headersSent) {
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Internal server error" }));
+    }
   }
 });
 
@@ -32,6 +46,7 @@ server.listen(3000, () => {
   console.log(" Server:    http://localhost:3000");
   console.log(" Auth:      JWT required (except /user/create)\n");
 });
+
 
 
 /*

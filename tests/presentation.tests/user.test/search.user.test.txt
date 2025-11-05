@@ -1,0 +1,17 @@
+3) Fetch (paginated list) — matches “fetch (paginated list)” tests
+
+echo '{"json":{"page":1,"pageSize":10}}' \
+| curl -sS -X POST "$BASE_URL/rpc/user/fetch" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    --data-binary @- \
+| jq
+
+
+(Negative) Invalid pagination should fail
+echo '{"json":{"page":0,"pageSize":-1}}' \
+| curl -sS -X POST "$BASE_URL/rpc/user/fetch" \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    --data-binary @- \
+| jq

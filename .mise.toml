@@ -19,6 +19,13 @@ node = "20"
 "test:user-workflows" = "npx vitest run tests/application.tests/user.application.tests/user.workflows.test.ts"
 
 
-
 dev = "npm run dev"
 build = "npm run build"
+
+
+# oRPC + Postman-style tests
+"test:postman"           = "npx vitest run tests/postman/**/*.test.ts"
+"test:postman:create"    = "npx vitest run tests/postman/user.test/create.user.test.ts"
+"test:postman:update"    = "npx vitest run tests/postman/user.test/update.user.test.ts"
+"test:postman:remove"    = "npx vitest run tests/postman/user.test/remove.user.test.ts"
+"test:postman:search"    = "npx vitest run tests/postman/user.test/search.user.test.ts"

@@ -40,7 +40,10 @@ mise run test:user-workflows
 ### End points testing:
 
 # Start the database
-docker-compose up -d postgres
+docker compose up
+
+Or if you want to run it in detached mode (background):
+docker compose up -d
 
 # Verify it's running
 docker ps | grep postgres
@@ -52,8 +55,14 @@ npx drizzle-kit push
 # start your server 
 # Run the  server
 npm run dev
-OR 
-# tsx src/server.ts
+mise run dev 
 
 
-curl -X POST http://localhost:3000/user/create ...
+# all postman/orpc tests
+mise run test:postman
+
+# or single spec
+mise run test:postman:create
+mise run test:postman:update
+mise run test:postman:remove
+mise run test:postman:search

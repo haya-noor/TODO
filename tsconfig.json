@@ -20,6 +20,8 @@
       "@/*": ["src/*"],
       "@domain/*": ["src/app/domain/*"],
       "@infra/*": ["src/app/infra/*"],
+      "@application/*": ["src/app/application/*"], 
+      "@presentation/*": ["src/presentation/*"],
       "@tests/*": ["tests/*"]
     }
   },

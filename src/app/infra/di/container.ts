@@ -28,6 +28,19 @@ export function registerRepository<T>
 }
 
 /**
+ * Register a repository with a factory function
+ * Useful for test scenarios where you need to provide specific dependencies (e.g., database instance)
+ * @param token - The DI token
+ * @param factory - Factory function that returns the repository instance
+ */
+export function registerRepositoryWithFactory<T>(
+  token: symbol,
+  factory: () => T
+): void {
+  container.register(token, { useFactory: factory });
+}
+
+/**
 Register a workflow implementation, same as registerRepository 
  */
 export function registerWorkflow<T>(token: symbol, implementation: new (...args: any[]) => T) {
