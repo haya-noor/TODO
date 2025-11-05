@@ -66,11 +66,7 @@ repo.update(updated) will replace the old entity with the new one.
 export const updateTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> => 
     pipe(
     S.decodeUnknown(UpdateTaskDtoSchema)(input),
-    E.mapError((error) => {
-      console.error("[WORKFLOW] Update task - DTO validation error:", error);
-      console.error("[WORKFLOW] Update task - Input:", JSON.stringify(input, null, 2));
-      return new TaskValidationError("Invalid update task input", "task", input);
-    }),
+    E.mapError(() => new TaskValidationError("Invalid update task input", "task", input)),
     E.flatMap((dto: UpdateTaskDto) =>
       pipe(
         // fetch the task from the database (ensures the task exists)
@@ -113,7 +109,9 @@ export const updateTask = (repo: TaskRepository) => (input: unknown): E.Effect<T
         E.flatMap((updated) => pipe(
           repo.update(updated),
           E.mapError(() => new TaskNotFoundError(String(dto.id)))
-)))));
+        ))
+      )
+    ));
 
 
 

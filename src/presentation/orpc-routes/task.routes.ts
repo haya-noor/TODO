@@ -75,7 +75,13 @@ export const update = os
   .use(validateUser)
   .handler(async ({ input, context }): Promise<TaskResponseDto> => {
     const workflow = resolve<TaskWorkflow>(TOKENS.TASK_WORKFLOW);
-    const command = withActor(input, context); // COMMAND - modifies state
+    
+    // Encode input from DTO schema back to wire (raw) format before passing to workflow
+    // since workflow expects to decode raw input
+    const encodedInput = await executeEffect(S.encode(TaskDTOs.UpdateTaskDtoSchema)(input));
+    
+    // Enrich with actor info and execute workflow
+    const command = withActor(encodedInput, context); // COMMAND - modifies state
     const result = await executeEffect(workflow.updateTask(command));
     
     return {
