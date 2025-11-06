@@ -41,7 +41,8 @@ export class TaskDrizzleRepository extends TaskRepository {
   /**
    * Helper method to check if an entity exists
    */
-  private ensureExists(id: IEntity["id"]): E.Effect<void, TaskMutationError, never> {
+  // return type boolean ( where this method is used -> use effect  any, if )
+  private ensureExists(id: IEntity["id"]): E.Effect<void, QueryError, never> {
     return pipe(
       this.fetchById(id),
       E.flatMap((taskOption) =>
@@ -57,6 +58,9 @@ export class TaskDrizzleRepository extends TaskRepository {
    * input: any - database row
    * output: Task entity or error
    * DB row -> task entity (using Task.create)
+   * 
+   * TODO: 
+   * no decerialziation error => validation error 
    */
   private fromDbRow(row: any): E.Effect<Task, DeserializationError, never> {
     return pipe(
@@ -67,6 +71,8 @@ export class TaskDrizzleRepository extends TaskRepository {
 
   /**
    * Adds a new task to the repository
+   * 
+   * MUTATION , SERIALIZATION ERROR -> MutationError
    */
   add(entity: Task): RepositoryEffect<Task, MutationError> {
     return pipe(
@@ -139,7 +145,7 @@ export class TaskDrizzleRepository extends TaskRepository {
         catch: (error) => new QueryError(`Failed to fetch task by id: ${error}`)
       }),
       E.flatMap((rows: any[]) => {
-        if (rows.length === 0) {
+        if (rows.length === 0) {    // use effect if, when (or unless use declarative code)
           return E.succeed(O.none());
         }
         return pipe(

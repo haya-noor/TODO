@@ -32,9 +32,14 @@ export const TasksPaginationDtoSchema = PaginationOptions;
 export const TaskSearchDtoSchema = PaginatedSearchParams;
 
 // Request DTO Types
-export type CreateTaskDto = S.Schema.Type<typeof CreateTaskDtoSchema>;
-export type UpdateTaskDto = S.Schema.Type<typeof UpdateTaskDtoSchema>;
-export type RemoveTaskDto = S.Schema.Type<typeof RemoveTaskDtoSchema>;
+
+
+
+export type CreateTaskDto = S.Schema.Encoded<typeof CreateTaskDtoSchema>;
+
+
+export type UpdateTaskDto = S.Schema.Encoded<typeof UpdateTaskDtoSchema>;
+export type RemoveTaskDto = S.Schema.Encoded<typeof RemoveTaskDtoSchema>;
 export type TaskBasicViewDto = S.Schema.Type<typeof TaskBasicViewDtoSchema>;
 export type TasksPaginationDto = S.Schema.Type<typeof TasksPaginationDtoSchema>;
 export type TaskSearchDto = S.Schema.Type<typeof TaskSearchDtoSchema>;

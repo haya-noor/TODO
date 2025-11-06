@@ -1,4 +1,8 @@
 
+/* 
+No unique constraint on assigneeId in the tasks table, so multiple tasks can share the 
+same assigneeId.
+*/
 import { pgTable, uuid, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {

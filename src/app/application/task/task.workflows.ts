@@ -25,101 +25,92 @@ it is used to add the task to the database.
 */
 
 // createTaskWorkflow
-export const createTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError, never> =>
-  pipe(
-    S.decodeUnknown(CreateTaskDtoSchema)(input),
-    E.mapError(() => new TaskValidationError("Invalid create task input", "task", input)),
-    E.map((dto: CreateTaskDto) => ({
-      ...dto,
-      id: TaskId.fromTrusted(UUID.init()),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    })),
-    E.flatMap((data: S.Schema.Type<typeof TaskSchema>) => 
-      pipe(
-        S.encode(TaskSchema)(data),
-        E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
-      )
-    ),
+// export const createTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError, never> =>
+  // pipe(
+    // S.decodeUnknown(CreateTaskDtoSchema)(input),
+    // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input)),
+    // E.map((dto: CreateTaskDto) => ({
+      // ...dto,
+      // id: TaskId.fromTrusted(UUID.init()),
+      // createdAt: DateTime.now(),
+      // updatedAt: DateTime.now(),
+    // })),
+    // E.flatMap((data: S.Schema.Type<typeof TaskSchema>) => 
+      // pipe(
+        // S.encode(TaskSchema)(data),
+        // // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
+      // // )
+    // // ),
 
-    E.flatMap((serialized) => 
-      pipe(
-        Task.create(serialized),
-        E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
-      )
-    ),
-    E.flatMap((entity) => 
-      pipe(
-        repo.add(entity),
-        E.mapError(() => new TaskValidationError("Failed to create task", "task", input))
-      )
-    )
-  );
+    // E.flatMap((serialized) => 
+      // pipe(
+        // Task.create(serialized),
+        // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
+      // )
+    // ),
+    // E.flatMap((entity) => 
+      // pipe(
+        // repo.add(entity),
+        // E.mapError(() => new TaskValidationError("Failed to create task", "task", input))
+      // )
+    // )
+  // );
 // updateTaskWorkflow
 /*
 once we update the task, this line : E.flatMap((nextSerialized) => Task.create(nextSerialized)) 
 will create a new task with the new values. because entities are immutable, we don't modify the
  existing task, we create a new one.
-
-repo.update(updated) will replace the old entity with the new one. 
 */
-export const updateTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> => 
+
+export const createTask = (repo: TaskRepository) => (input: CreateTaskDto): E.Effect<Task, TaskValidationError, never> =>
+  pipe(
+    E.succeed({
+      ...input,
+      id: TaskId.fromTrusted(UUID.init()),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    }),
+    E.flatMap((data: SerializedTask) => Task.create(data)),
+    E.flatMap((entity) => repo.add(entity)),
+  )
+
+
+export const updateTask = (repo: TaskRepository) => (input: UpdateTaskDto): E.Effect<SerializedTask, TaskValidationError | TaskNotFoundError, never> => 
     pipe(
-    S.decodeUnknown(UpdateTaskDtoSchema)(input),
-    E.mapError(() => new TaskValidationError("Invalid update task input", "task", input)),
-    E.flatMap((dto: UpdateTaskDto) =>
+    E.succeed(input),
+    E.flatMap((data) =>
       pipe(
-        // fetch the task from the database (ensures the task exists)
-        repo.fetchById(dto.id),
-        E.mapError(() => new TaskNotFoundError(String(dto.id))),
+        repo.fetchById(TaskId.fromTrusted(data.id)),
+        E.mapError(() => new TaskNotFoundError(String(data.id))),
         E.flatMap((maybe) =>
           O.match(maybe, {
-            onNone: () => E.fail(new TaskNotFoundError(String(dto.id))),
+            onNone: () => E.fail(new TaskNotFoundError(String(data.id))),
             onSome: (existing) => pipe(
               existing.serialized(), 
               E.mapError(() => new TaskValidationError("Failed to serialize existing task", "task", input))
             )})
         ),
-        // update the task with the new values 
-        // Merge current task with DTO fields - only update fields that are provided in DTO
-        E.map((current: SerializedTask) => {
-          // Helper to encode Option objects into plain values using Schema.encodeSync
-          // because the DTO validation returns Option objects, we need to encode them into
-          //  plain values , we need plain values to update the task.
-          const encodeField = <T>(fieldSchema: S.Schema<T, any>, value: any): T => {
-            if (typeof value === 'object' && value !== null && '_id' in value && value._id === 'Option') {
-              return S.encodeSync(fieldSchema)(value);
-            }
-            return value;
-          };
-          
+        E.map((current) => {
           const updated: SerializedTask = {
             ...current,
-            ...(dto.title !== undefined && { title: encodeField(TaskSchema.fields.title, dto.title) }),
-            ...(dto.description !== undefined && { description: encodeField(TaskSchema.fields.description, dto.description) }),
-            ...(dto.status !== undefined && { status: encodeField(TaskSchema.fields.status, dto.status) }),
-            ...(dto.assigneeId !== undefined && { assigneeId: encodeField(TaskSchema.fields.assigneeId, dto.assigneeId) }),
+            ... data,
             updatedAt: DateTime.now()
           };
-          
           return updated;
         }),
         E.flatMap((nextSerialized) => Task.create(nextSerialized)),
         E.mapError(() => new TaskValidationError("Invalid task update payload", "task", input)),
-        E.flatMap((updated) => pipe(
-          repo.update(updated),
-          E.mapError(() => new TaskNotFoundError(String(dto.id)))
-        ))
+        E.flatMap((updated) => repo.update(updated)),
+        E.flatMap((updatedEntity) => updatedEntity.serialized()),
       )
-    ));
-
+    )
+  );
 
 
 
 // getAllTasksWorkflow
 export const getAllTasks = (repo: TaskRepository): E.Effect<Task[], TaskValidationError, never> => 
   pipe(repo.fetchAll(),E.mapError(() => new TaskValidationError("Failed to fetch tasks")));
-
 
 
 
@@ -180,11 +171,11 @@ export const searchTasks = (repo: TaskRepository) => (input: unknown): E.Effect<
 export class TaskWorkflow {
   constructor(@inject(TOKENS.TASK_REPOSITORY) private readonly repo: TaskRepository) {}
 
-  createTask(input: unknown): E.Effect<Task, TaskValidationError, never> {
+  createTask(input: CreateTaskDto): E.Effect<Task, TaskValidationError, never> {
     return createTask(this.repo)(input);
   }
 
-  updateTask(input: unknown): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> {
+  updateTask(input: UpdateTaskDto): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> {
     return updateTask(this.repo)(input);
   }
 

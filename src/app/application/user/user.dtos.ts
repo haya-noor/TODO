@@ -28,8 +28,8 @@ export const UserBasicViewDtoSchema = UserSchema.omit("password");
 export const UsersPaginationDtoSchema = PaginationOptions;
 
 // Request DTO Types
-export type CreateUserDto = S.Schema.Type<typeof CreateUserDtoSchema>;
-export type UpdateUserDto = S.Schema.Type<typeof UpdateUserDtoSchema>;
+export type CreateUserDto = S.Schema.Encoded<typeof CreateUserDtoSchema>;
+export type UpdateUserDto = S.Schema.Encoded<typeof UpdateUserDtoSchema>;
 export type RemoveUserDto = S.Schema.Type<typeof RemoveUserDtoSchema>;
 export type UserBasicViewDto = S.Schema.Type<typeof UserBasicViewDtoSchema>;
 export type UsersPaginationDto = S.Schema.Type<typeof UsersPaginationDtoSchema>;

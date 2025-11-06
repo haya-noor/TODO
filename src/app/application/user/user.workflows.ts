@@ -7,7 +7,7 @@ import { UserRepository } from "../../domain/user/user.repository";
 import { UserNotFoundError, UserValidationError, UserMutationError } from "../../domain/user/user.errors";
 import type { PaginatedData } from "../../domain/utils/pagination";
 import { UUID, DateTime } from "../../domain/brand/constructors";
-import { UserIdSchema } from "../../domain/brand/ids";
+import { UserId, UserIdSchema } from "../../domain/brand/ids";
 import type { SerializedUser } from "../../domain/user/user.schema";
 import { TOKENS } from "../../infra/di/tokens";
 
@@ -16,32 +16,16 @@ import {
   type CreateUserDto, type UpdateUserDto, type UsersPaginationDto,
 } from "./user.dtos";
 
-/*
-1. User.create(serialized) - Domain Layer (In-Memory)
-Validates business rules (name length, email format, etc.)
-Constructs a User entity object
-Runs in memory - NO database involved
-Returns: Effect<User, ValidationError>
-
-2. repo.add(entity) - Infrastructure Layer (Database)
-Persists the entity to database
-Executes SQL INSERT statement
-Actual I/O operation
-Returns: Effect<User, ValidationError>
-*/
-
-
-
 
 // createUserWorkflow
-export const createUser = (repo: UserRepository) => (input: unknown): E.Effect<User, UserValidationError, never> =>
-  pipe(S.decodeUnknown(CreateUserDtoSchema)(input),
-    E.map((dto: CreateUserDto) => ({
-      ...dto,
-      id: UUID.init(),
+export const createUser = (repo: UserRepository) => (input: CreateUserDto): E.Effect<User, UserValidationError, never> =>
+  pipe(
+    E.succeed({
+      ...input,
+      id: UserId.fromTrusted(UUID.init()),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-    })),
+    }),
     E.flatMap((serialized) => User.create(serialized)),
     E.mapError(() => new UserValidationError("Invalid create user input", "user", input)),
     E.flatMap((entity) => repo.add(entity)),

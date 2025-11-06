@@ -103,7 +103,7 @@ export const remove = os
     
     return {
       success: true,
-      id: (input as any).id,
+      id: (input as any).id,   // use proper types 
     };
   });
 
