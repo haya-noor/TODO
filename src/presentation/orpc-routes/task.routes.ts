@@ -84,14 +84,14 @@ export const update = os
     const command = withActor(encodedInput, context); // COMMAND - modifies state
     const result = await executeEffect(workflow.updateTask(command));
     
-    // updateTask returns SerializedTask (Encoded), decode it to Type for response DTO
-    // Use decode instead of decodeUnknown since we know the structure
-    const decodedResult = await executeEffect(S.decode(TaskDTOs.TaskBasicViewDtoSchema)(result));
-    
+    // updateTask returns SerializedTask (Encoded), same format as serializeEntity would return
+    // oRPC's toStandard() output validation handles Encoded -> Type conversion automatically
+    // (same pattern as create route which uses serializeEntity)
+    // Use proper Encoded type: TaskBasicViewDto is S.Schema.Encoded<typeof TaskBasicViewDtoSchema>
     return {
       success: true,
-      data: decodedResult,
-    };
+      data: result as TaskDTOs.TaskBasicViewDto,
+    } as TaskResponseDto;
   });
 
 // COMMAND: Delete task
