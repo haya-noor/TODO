@@ -5,11 +5,12 @@ import { PaginatedData, PaginationOptions } from "../utils/pagination";
 import { PaginatedSearchParams } from "./task.schema";
 import { ValidationError, QueryError, NotFoundError, MutationError } from "../utils/base.errors";
 import type { IEntity } from "../utils/base.entity";
+import { TaskValidationError } from "./task.errors";
 
 
 export abstract class TaskRepository extends BaseRepository<Task> {
  
-  abstract add(entity: Task): RepositoryEffect<Task, ValidationError>;
+  abstract add(entity: Task): RepositoryEffect<Task, TaskValidationError | MutationError>;
 
  
   abstract update(entity: Task): RepositoryEffect<Task, NotFoundError>;

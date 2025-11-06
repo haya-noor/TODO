@@ -16,51 +16,6 @@ import {
 } from "./task.dtos";
 import { TaskIdSchema, TaskId } from "../../domain/brand/ids";
 
-/*
-input : unknown (becasue input is coming from the client,input could be anything like a string, number, object, etc.)
-output : entityEffect: Effect<Task, TaskValidationError, never> 
-
-TaskRepository is an interface that defines the methods that a task repository must implement. 
-it is used to add the task to the database. 
-*/
-
-// createTaskWorkflow
-// export const createTask = (repo: TaskRepository) => (input: unknown): E.Effect<Task, TaskValidationError, never> =>
-  // pipe(
-    // S.decodeUnknown(CreateTaskDtoSchema)(input),
-    // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input)),
-    // E.map((dto: CreateTaskDto) => ({
-      // ...dto,
-      // id: TaskId.fromTrusted(UUID.init()),
-      // createdAt: DateTime.now(),
-      // updatedAt: DateTime.now(),
-    // })),
-    // E.flatMap((data: S.Schema.Type<typeof TaskSchema>) => 
-      // pipe(
-        // S.encode(TaskSchema)(data),
-        // // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
-      // // )
-    // // ),
-
-    // E.flatMap((serialized) => 
-      // pipe(
-        // Task.create(serialized),
-        // E.mapError(() => new TaskValidationError("Invalid create task input", "task", input))
-      // )
-    // ),
-    // E.flatMap((entity) => 
-      // pipe(
-        // repo.add(entity),
-        // E.mapError(() => new TaskValidationError("Failed to create task", "task", input))
-      // )
-    // )
-  // );
-// updateTaskWorkflow
-/*
-once we update the task, this line : E.flatMap((nextSerialized) => Task.create(nextSerialized)) 
-will create a new task with the new values. because entities are immutable, we don't modify the
- existing task, we create a new one.
-*/
 
 export const createTask = (repo: TaskRepository) => (input: CreateTaskDto): E.Effect<Task, TaskValidationError, never> =>
   pipe(
@@ -91,9 +46,19 @@ export const updateTask = (repo: TaskRepository) => (input: UpdateTaskDto): E.Ef
             )})
         ),
         E.map((current) => {
+          // extract only the task fields, excluding actorId and actorRole that may be added by withActor (from context in routes)
+          // because we're updating task, we don't want to update actorId and actorRole
+          const { actorId, actorRole, ...taskdata } = data as UpdateTaskDto & { actorId?: string; actorRole?: string };
+          
+          // Only include fields that are actually provided and are part of SerializedTask schema
+          // Filter out undefined values to avoid schema validation issues
           const updated: SerializedTask = {
             ...current,
-            ... data,
+            id: taskdata.id ?? current.id,
+            ...(taskdata.title !== undefined && { title: taskdata.title }),
+            ...(taskdata.description !== undefined && { description: taskdata.description }),
+            ...(taskdata.status !== undefined && { status: taskdata.status }),
+            ...(taskdata.assigneeId !== undefined && { assigneeId: taskdata.assigneeId }),
             updatedAt: DateTime.now()
           };
           return updated;
@@ -128,9 +93,6 @@ export const getTaskById = (repo: TaskRepository) => (id: unknown): E.Effect<Tas
         }))))
   );
 
-
-
-  
 // removeTaskWorkflow
 export const deleteTaskById = (repo: TaskRepository) => (input: unknown
 ): E.Effect<Task, TaskValidationError | TaskNotFoundError , never> =>
@@ -158,7 +120,7 @@ export const searchTasks = (repo: TaskRepository) => (input: unknown): E.Effect<
   pipe(
     S.decodeUnknown(TaskSearchDtoSchema)(input),
     E.mapError(() => new TaskValidationError("Invalid search params", "searchParams", input)),
-    E.flatMap((params: TaskSearchDto) => 
+    E.flatMap((params) => 
       pipe(repo.search(params), E.mapError(() => new TaskValidationError("Failed to search tasks"))
 )));
 
@@ -175,7 +137,7 @@ export class TaskWorkflow {
     return createTask(this.repo)(input);
   }
 
-  updateTask(input: UpdateTaskDto): E.Effect<Task, TaskValidationError | TaskNotFoundError, never> {
+  updateTask(input: UpdateTaskDto): E.Effect<SerializedTask, TaskValidationError | TaskNotFoundError, never> {
     return updateTask(this.repo)(input);
   }
 

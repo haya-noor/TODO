@@ -15,11 +15,6 @@ curl -X POST http://localhost:3000/user/fetch \
   -H "Authorization: Bearer $TOKEN" \
   -d "{\"json\":{\"page\":2,\"limit\":20},\"meta\":[]}"
 
-# Fetch with custom limit
-curl -X POST http://localhost:3000/user/fetch \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d "{\"json\":{\"page\":1,\"limit\":5},\"meta\":[]}"
 
 # Fetch with sorting (optional)
 curl -X POST http://localhost:3000/user/fetch \

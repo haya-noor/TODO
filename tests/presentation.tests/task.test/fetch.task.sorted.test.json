@@ -1,6 +1,3 @@
-# Endpoint: POST /task/fetch
-# Protected endpoint - Requires JWT token in Authorization header
-# Header: Authorization: Bearer <token>
 
 {
   "json": {

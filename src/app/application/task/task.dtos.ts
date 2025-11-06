@@ -40,8 +40,9 @@ export type CreateTaskDto = S.Schema.Encoded<typeof CreateTaskDtoSchema>;
 
 export type UpdateTaskDto = S.Schema.Encoded<typeof UpdateTaskDtoSchema>;
 export type RemoveTaskDto = S.Schema.Encoded<typeof RemoveTaskDtoSchema>;
-export type TaskBasicViewDto = S.Schema.Type<typeof TaskBasicViewDtoSchema>;
-export type TasksPaginationDto = S.Schema.Type<typeof TasksPaginationDtoSchema>;
-export type TaskSearchDto = S.Schema.Type<typeof TaskSearchDtoSchema>;
-export type TaskIdParam = S.Schema.Type<typeof TaskIdSchema>;
+
+export type TaskBasicViewDto = S.Schema.Encoded<typeof TaskBasicViewDtoSchema>;
+export type TasksPaginationDto = S.Schema.Encoded<typeof TasksPaginationDtoSchema>;
+export type TaskSearchDto = S.Schema.Encoded<typeof TaskSearchDtoSchema>;
+export type TaskIdParam = S.Schema.Encoded<typeof TaskIdSchema>;
 

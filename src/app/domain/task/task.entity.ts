@@ -67,7 +67,7 @@ export class Task extends BaseEntity implements IEntity {
    * 
    * Returns an Effect that succeeds with SerializedTask
    */
-  serialized(): E.Effect<SerializedTask, ParseResult.ParseError, never> {
+  serialized(): E.Effect<SerializedTask, TaskValidationError, never> {
     return S.encode(TaskSchema)({
       id: this.taskId,
       title: this.title,
@@ -76,7 +76,16 @@ export class Task extends BaseEntity implements IEntity {
       assigneeId: this.assigneeId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
-    });
+    })
+    .pipe(
+      E.mapError((error) => 
+        new TaskValidationError(
+          "Failed to serialize task",
+          "task",
+          this
+        )
+      )
+    );
   }
 
   /**

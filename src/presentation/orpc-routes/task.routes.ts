@@ -84,9 +84,13 @@ export const update = os
     const command = withActor(encodedInput, context); // COMMAND - modifies state
     const result = await executeEffect(workflow.updateTask(command));
     
+    // updateTask returns SerializedTask (Encoded), decode it to Type for response DTO
+    // Use decode instead of decodeUnknown since we know the structure
+    const decodedResult = await executeEffect(S.decode(TaskDTOs.TaskBasicViewDtoSchema)(result));
+    
     return {
       success: true,
-      data: await serializeEntity(result),
+      data: decodedResult,
     };
   });
 

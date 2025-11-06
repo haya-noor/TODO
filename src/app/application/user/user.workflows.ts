@@ -17,7 +17,6 @@ import {
 } from "./user.dtos";
 
 
-// createUserWorkflow
 export const createUser = (repo: UserRepository) => (input: CreateUserDto): E.Effect<User, UserValidationError, never> =>
   pipe(
     E.succeed({
@@ -26,40 +25,42 @@ export const createUser = (repo: UserRepository) => (input: CreateUserDto): E.Ef
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     }),
-    E.flatMap((serialized) => User.create(serialized)),
-    E.mapError(() => new UserValidationError("Invalid create user input", "user", input)),
+    E.flatMap((data: SerializedUser) => User.create(data)),
     E.flatMap((entity) => repo.add(entity)),
-    E.mapError(() => new UserValidationError("Failed to create user", "user", input))
-  );
+  )
 
 
-// updateUserWorkflow
-export const updateUser = (repo: UserRepository) => (input: unknown): E.Effect<User, UserValidationError | UserNotFoundError, never> =>
-  pipe(
-    S.decodeUnknown(UpdateUserDtoSchema)(input),
-    E.mapError(() => new UserValidationError("Invalid update user input", "user", input)),
-    E.flatMap((dto: UpdateUserDto) =>
-      pipe(repo.fetchById(dto.id), // fetch the user from the database (ensures the user exists)
-        E.mapError(() => new UserNotFoundError(String(dto.id))),
+export const updateUser = (repo: UserRepository) => (input: UpdateUserDto): E.Effect<SerializedUser, UserValidationError | UserNotFoundError, never> => 
+    pipe(
+    E.succeed(input),
+    E.flatMap((data) =>
+      pipe(
+        repo.fetchById(UserId.fromTrusted(data.id)),
+        E.mapError(() => new UserNotFoundError(String(data.id))),
         E.flatMap((maybe) =>
           O.match(maybe, {
-            onNone: () => E.fail(new UserNotFoundError(String(dto.id))),
-            onSome: (existing) => 
-              pipe(existing.serialized(),E.mapError(() => new UserValidationError("Failed to serialize existing user", "user", input)))
-          })
+            onNone: () => E.fail(new UserNotFoundError(String(data.id))),
+            onSome: (existing) => pipe(
+              existing.serialized(), 
+              E.mapError(() => new UserValidationError("Failed to serialize existing user", "user", input))
+            )})
         ),
-        E.map((current: SerializedUser) => ({
-          ...current,
-          ...dto,
-          updatedAt: DateTime.now(),
-        })),
+        E.map((current) => {
+          const updated: SerializedUser = {
+            ...current,
+            ... data,
+            updatedAt: DateTime.now()
+          };
+          return updated;
+        }),
         E.flatMap((nextSerialized) => User.create(nextSerialized)),
         E.mapError(() => new UserValidationError("Invalid user update payload", "user", input)),
-        E.flatMap((updated) => pipe(
-          repo.update(updated),
-          E.mapError(() => new UserNotFoundError(String(dto.id)))
-        ))))
-);
+        E.flatMap((updated) => repo.update(updated)),
+        E.flatMap((updatedEntity) => updatedEntity.serialized()),
+        E.mapError(() => new UserValidationError("Failed to serialize updated user", "user", input)),
+      )
+    )
+  );
 
 // getAllUsersWorkflow
 export const getAllUsers = (repo: UserRepository): E.Effect<User[], UserValidationError, never> =>
@@ -109,11 +110,11 @@ export const getUsersPaginated = (repo: UserRepository) => (input: unknown): E.E
 export class UserWorkflow {
   constructor(@inject(TOKENS.USER_REPOSITORY) private readonly repo: UserRepository) {}
 
-  createUser(input: unknown): E.Effect<User, UserValidationError, never> {
+  createUser(input: CreateUserDto): E.Effect<User, UserValidationError, never> {
     return createUser(this.repo)(input);
   }
 
-  updateUser(input: unknown): E.Effect<User, UserValidationError | UserNotFoundError, never> {
+  updateUser(input: UpdateUserDto): E.Effect<SerializedUser, UserValidationError | UserNotFoundError, never> {
     return updateUser(this.repo)(input);
   }
 

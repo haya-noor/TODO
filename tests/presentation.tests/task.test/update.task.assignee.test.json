@@ -1,6 +1,3 @@
-# Endpoint: POST /task/update
-# Protected endpoint - Requires JWT token in Authorization header
-# Header: Authorization: Bearer <token>
 
 {
   "json": {

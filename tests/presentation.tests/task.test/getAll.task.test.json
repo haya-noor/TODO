@@ -1,7 +1,3 @@
-# Endpoint: POST /task/getAll
-# Protected endpoint - Requires JWT token in Authorization header
-# Header: Authorization: Bearer <token>
-# Note: This endpoint requires no input, but oRPC envelope format still needed
 
 {
   "json": {},
