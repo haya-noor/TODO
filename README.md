@@ -210,7 +210,10 @@ tests/
     └── task.test/
 ```
 
-### Run Tests
+---
+
+### Running Automated Tests (Domain, Application, Infrastructure)
+
 ```bash
 # Domain tests 
 mise run test:user-entity
@@ -228,103 +231,130 @@ mise run test:task-dtos
 mise run test:task-workflows
 mise run test:user-dtos
 mise run test:user-workflows
-
 ```
 
-## 📡 API Examples
+---
 
-### Create User (Public - No Auth)
-```bash
-curl -X POST http://localhost:3000/user/create \
-  -H "Content-Type: application/json" \
-  -d '{
-    "json": {
-      "name": "Alice",
-      "email": "alice@example.com",
-      "password": "Secret#123"
-    },
-    "meta": []
-  }'
+## 🧪 Manual Contract Testing (Postman)
 
-# Response includes JWT token
+Alongside automated testing, all API endpoints were fully validated through **manual contract testing using Postman**.
+Each endpoint was executed with real request/response bodies to confirm:
+
+* oRPC route definitions match the actual HTTP behavior
+* Effect Schema validation enforces proper input rules
+* JWT authentication & authorization work end-to-end
+* Admin vs User role logic behaves correctly
+* Task & User workflows operate as designed
+* Pagination, search, and filtering produce correct results
+
+These tests ensure complete **end-to-end reliability** across the Presentation → Application → Domain → Infrastructure layers.
+
+---
+
+### 📌 Postman Environment Setup
+
+A dedicated Postman environment was used to store reusable variables:
+
+| Variable        | Purpose                                  |
+| --------------- | ---------------------------------------- |
+| `baseUrl`       | API root (e.g., `http://localhost:3000`) |
+| `adminEmail`    | Admin creation email                     |
+| `adminPass`     | Admin password                           |
+| `assigneeEmail` | Standard user email                      |
+| `assigneePass`  | Standard user password                   |
+| `adminToken`    | JWT returned after admin login/creation  |
+| `assigneeToken` | JWT returned after assignee login        |
+| `adminId`       | UUID returned from admin creation        |
+| `assigneeId`    | UUID returned from assignee creation     |
+| `taskId`        | UUID of created task                     |
+| `taskStatus`    | Used during search tests                 |
+| `page`          | Pagination page                          |
+| `limit`         | Pagination size                          |
+
+These variables were automatically injected into request bodies using the Postman template syntax:
+
+```
+{{variableName}}
+```
+
+---
+
+### 👤 User Endpoint Tests (Postman)
+
+All User endpoints were manually verified:
+
+* **POST** `/user/create` (Admin & Assignee)
+* **POST** `/user/updateEmail`
+* **POST** `/user/updateName`
+* **POST** `/user/updatePassword`
+* **POST** `/user/updateAllCredentials`
+* **POST** `/user/delete`
+* **POST** `/user/search` (paginated)
+
+Example: **Create Admin**
+
+```json
 {
   "json": {
-    "success": true,
-    "data": { "id": "...", "name": "Alice", "email": "alice@example.com" },
-    "token": "eyJhbGciOiJub25lIi..."
+    "name": "Admin",
+    "email": "{{adminEmail}}",
+    "password": "{{adminPass}}",
+    "roles": ["Admin"]
   }
 }
 ```
 
-### Create Task (Protected - Requires JWT)
-```bash
-TOKEN="eyJhbGciOiJub25lIi..."
-USER_ID="550e8400-e29b-41d4-a716-446655440000"
+Example: **Authorization header used for protected routes**
 
-curl -X POST http://localhost:3000/task/create \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "json": {
-      "title": "Implement authentication",
-      "description": "Add JWT-based auth with refresh tokens...",
-      "status": "TODO",
-      "assigneeId": "'$USER_ID'"
-    },
-    "meta": []
-  }'
+```bash
+Authorization: Bearer {{adminToken}}
 ```
 
-### Search Tasks
-```bash
-curl -X POST http://localhost:3000/task/search \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "json": {
-      "page": 1,
-      "limit": 10,
-      "text": "authentication",
-      "status": ["TODO", "IN_PROGRESS"]
-    },
-    "meta": []
-  }'
+---
+
+### 📝 Task Endpoint Tests (Postman)
+
+All Task endpoints were validated:
+
+* **POST** `/task/create`
+* **POST** `/task/createMinimal`
+* **POST** `/task/remove`
+* **POST** `/task/get` (pagination)
+* **POST** `/task/getAll`
+* **POST** `/task/getById`
+* **POST** `/task/update`
+* **POST** `/task/search`
+* **POST** `/task/searchFiltered`
+
+Example: **Create Task**
+
+```json
+{
+  "json": {
+    "title": "Implement user authentication",
+    "description": "Add JWT-based authentication with refresh tokens.",
+    "status": "TODO",
+    "assigneeId": "{{assigneeId}}"
+  },
+  "meta": []
+}
 ```
 
-## 🔐 Authentication Flow
+---
 
-1. **User Registration** → `/user/create` (public)
-   - Creates user entity
-   - Generates JWT token
-   - Returns token in response
+### ✔️ Contract Testing Result
 
-2. **Token Structure** (No signature for simplicity)
-   ```json
-   {
-     "userId": "uuid",
-     "role": "assignee|admin",
-     "email": "user@example.com"
-   }
-   ```
+All endpoints passed Postman validations:
 
-3. **Protected Routes** → All other endpoints
-   - Extract token from `Authorization: Bearer <token>`
-   - Parse JWT payload
-   - Enrich context with user info
-   - Validate user exists
+* Request & response schemas matched oRPC definitions
+* Input validation correctly rejected malformed data
+* Authentication & role-based access control worked correctly
+* Task creation, update, search, pagination, and deletion behaved as expected
+* All CRUD flows executed without errors
+* Tokens were generated, validated, and reused successfully
 
-4. **Context Enrichment**
-   ```typescript
-   // Before middleware: BaseContext
-   { headers: { authorization: "Bearer ..." } }
-   
-   // After middleware: AuthenticatedContext
-   {
-     headers: {...},
-     user: { id: "...", role: "assignee", email: "..." }
-   }
-   ```
+
+---
 
 
 
-**Built with ❤️ using Clean Architecture, Effect-TS, and functional programming principles.**
